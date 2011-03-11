@@ -8,7 +8,13 @@ module Rews
       @client=client
     end
 
-    def find_folder_ids
+    INDEXED_PAGE_OPTS = {:max_entries_returned=>nil, :offset=>nil, :base_point=>nil}
+
+    FIND_FOLDER_ID_OPTS = {:indexed_page=>INDEXED_PAGE_OPTS}
+
+    def find_folder_ids(opts={})
+      opts = check_opts(FIND_FOLDER_ID_OPTS, opts)
+
       r = client.request(:wsdl, "FindFolder", "Traversal"=>"Shallow") do
         soap.namespaces["xmlns:t"]=SCHEMA_TYPES
         soap.body = {
@@ -25,8 +31,14 @@ module Rews
       end
     end
 
+    FIND_MESSAGE_IDS_OPTS = {
+      :received_before=>nil, 
+      :indexed_page=>INDEXED_PAGE_OPTS}
+
     # find message-ids in a folder
-    def find_message_ids
+    def find_message_ids(opts={})
+      opts = check_opts(FIND_MESSAGE_IDS_OPTS, opts)
+
       r = client.request(:wsdl, "FindItem", "Traversal"=>"Shallow") do
         soap.namespaces["xmlns:t"]=SCHEMA_TYPES
         soap.body = {
@@ -45,13 +57,22 @@ module Rews
     def get_messages(message_ids)
       r = client.request(:wsdl, "GetItem") do
         soap.namespaces["xmlns:t"]=SCHEMA_TYPES
-        soap.body = {
-          "wsdl:ItemShape"=>{
-            "t:BaseShape"=>"Default",
-            "t:IncludeMimeContent"=>true},
-          "wsdl:ItemIds!"=>message_ids.map{|mid| Gyoku.xml(mid.to_xml_hash)}.join,
-          :order! => ["wsdl:ItemShape","wsdl:ItemIds!"]
-        }
+        
+        xml = Builder::XmlMarkup.new
+        xml.wsdl :ItemShape do
+          xml.t :BaseShape, "Default"
+          xml.t :IncludeMimeContent, true
+          xml.t :AdditionalProperties do
+            xml.t :FieldURI, :FieldURI=>"item:DateTimeReceived"
+          end
+        end
+        xml.wsdl :ItemIds do
+          message_ids.each do |mid|
+            xml << Gyoku.xml(mid.to_xml_hash)
+          end
+        end
+
+        soap.body = xml.target!
       end
       msgs = r.to_hash.fetch_in(:get_item_response,:response_messages,:get_item_response_message)
       msgs.map do |msg|
