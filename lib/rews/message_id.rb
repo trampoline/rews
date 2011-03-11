@@ -16,13 +16,20 @@ module Rews
     def get_message
       r = client.request(:wsdl, "GetItem") do
         soap.namespaces["xmlns:t"]=SCHEMA_TYPES
-        soap.body = {
-          "wsdl:ItemShape"=>{
-            "t:BaseShape"=>"Default",
-            "t:IncludeMimeContent"=>true},
-          "wsdl:ItemIds"=>self.to_xml_hash,
-          :order! => ["wsdl:ItemShape","wsdl:ItemIds"]
-        }
+
+        xml = Builder::XmlMarkup.new
+        xml.wsdl :ItemShape do
+          xml.t :BaseShape, "Default"
+          xml.t :IncludeMimeContent, true
+          xml.t :AdditionalProperties do
+            xml.t :FieldURI, :FieldURI=>"item:DateTimeReceived"
+          end
+        end
+        xml.wsdl :ItemIds do
+          xml << Gyoku.xml(self.to_xml_hash)
+        end
+
+        soap.body = xml.target!
       end
       msgs = r.to_hash.fetch_in(:get_item_response,:response_messages,:get_item_response_message,:items,:message)
     end

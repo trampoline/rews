@@ -10,7 +10,10 @@ module Rews
 
     INDEXED_PAGE_ITEM_VIEW_OPTS = {:max_entries_returned=>nil, :offset=>0, :base_point=>"Beginning"}
 
-    FIND_FOLDER_ID_OPTS = {:indexed_page_item_view=>INDEXED_PAGE_ITEM_VIEW_OPTS}
+    FIND_FOLDER_ID_OPTS = {
+      :restriction=>nil,
+      :sort_order=>nil,
+      :indexed_page_item_view=>INDEXED_PAGE_ITEM_VIEW_OPTS}
 
     def find_folder_ids(opts={})
       opts = check_opts(FIND_FOLDER_ID_OPTS, opts)
@@ -36,7 +39,8 @@ module Rews
     end
 
     FIND_MESSAGE_IDS_OPTS = {
-      :received_before=>nil, 
+      :restriction=>nil,
+      :sort_order=>nil,
       :indexed_page_item_view=>INDEXED_PAGE_ITEM_VIEW_OPTS}
 
     # find message-ids in a folder
@@ -58,6 +62,12 @@ module Rews
           attrs["Offset"] = o[:offset]
           attrs["BasePoint"] = o[:base_point]
           xml.wsdl :IndexedPageItemView, attrs
+        end
+        if opts[:restriction]
+          xml << Restriction.new(opts[:restriction]).to_xml
+        end
+        if opts[:sort_order]
+          xml << SortOrder.new(opts[:sort_order]).to_xml
         end
         xml.wsdl :ParentFolderIds do
           xml << Gyoku.xml(self.to_xml_hash)

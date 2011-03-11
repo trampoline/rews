@@ -13,6 +13,8 @@ module Rews
 end
 
 require 'rews/util'
+require 'rews/restriction'
+require 'rews/sort_order'
 require 'rews/folder_id'
 require 'rews/message_id'
 
