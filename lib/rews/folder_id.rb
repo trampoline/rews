@@ -8,21 +8,25 @@ module Rews
       @client=client
     end
 
-    INDEXED_PAGE_OPTS = {:max_entries_returned=>nil, :offset=>nil, :base_point=>nil}
+    INDEXED_PAGE_ITEM_VIEW_OPTS = {:max_entries_returned=>nil, :offset=>0, :base_point=>"Beginning"}
 
-    FIND_FOLDER_ID_OPTS = {:indexed_page=>INDEXED_PAGE_OPTS}
+    FIND_FOLDER_ID_OPTS = {:indexed_page_item_view=>INDEXED_PAGE_ITEM_VIEW_OPTS}
 
     def find_folder_ids(opts={})
       opts = check_opts(FIND_FOLDER_ID_OPTS, opts)
 
       r = client.request(:wsdl, "FindFolder", "Traversal"=>"Shallow") do
         soap.namespaces["xmlns:t"]=SCHEMA_TYPES
-        soap.body = {
-          "wsdl:FolderShape"=>{"t:BaseShape"=>"IdOnly"},
-          "wsdl:ParentFolderIds"=>self.to_xml_hash,
-          :order! => ["wsdl:FolderShape","wsdl:ParentFolderIds"]
-        }
+        xml = Builder::XmlMarkup.new
+        xml.wsdl :FolderShape do
+          xml.t :BaseShape, "IdOnly"
+        end
+        xml.wsdl :ParentFolderIds do
+          xml << Gyoku.xml(self.to_xml_hash)
+        end
+        soap.body = xml.target!
       end
+
       folders = [*r.to_hash.fetch_in(:find_folder_response, :response_messages, :find_folder_response_message, :root_folder, :folders, :folder)].compact
       if folders
         folders.map do |folder| 
@@ -33,7 +37,7 @@ module Rews
 
     FIND_MESSAGE_IDS_OPTS = {
       :received_before=>nil, 
-      :indexed_page=>INDEXED_PAGE_OPTS}
+      :indexed_page_item_view=>INDEXED_PAGE_ITEM_VIEW_OPTS}
 
     # find message-ids in a folder
     def find_message_ids(opts={})
@@ -41,11 +45,25 @@ module Rews
 
       r = client.request(:wsdl, "FindItem", "Traversal"=>"Shallow") do
         soap.namespaces["xmlns:t"]=SCHEMA_TYPES
-        soap.body = {
-          "wsdl:ItemShape"=>{"t:BaseShape"=>"IdOnly"},
-          "wsdl:ParentFolderIds"=>self.to_xml_hash,
-          :order! => ["wsdl:ItemShape","wsdl:ParentFolderIds"]
-        }
+        
+        xml = Builder::XmlMarkup.new
+        
+        xml.wsdl :ItemShape do
+          xml.t :BaseShape, "IdOnly"
+        end
+        if opts[:indexed_page_item_view]
+          o = opts[:indexed_page_item_view]
+          attrs = {}
+          attrs["MaxEntriesReturned"] = o[:max_entries_returned] if o[:max_entries_returned]
+          attrs["Offset"] = o[:offset]
+          attrs["BasePoint"] = o[:base_point]
+          xml.wsdl :IndexedPageItemView, attrs
+        end
+        xml.wsdl :ParentFolderIds do
+          xml << Gyoku.xml(self.to_xml_hash)
+        end
+
+        soap.body = xml.target!
       end
       msgs = [*r.to_hash.fetch_in(:find_item_response, :response_messages, :find_item_response_message, :root_folder, :items, :message)].compact
       msgs.map do |msg|
