@@ -1,6 +1,27 @@
 = rews
 
-Description goes here.
+REWS is a Ruby client for Exchange Web Services, currently focussed on retrieving email messages
+
+to use : 
+
+  # create a client
+  c = Rews::Client.new("https://exchange.bar.com/EWS/Exchange.asmx", :ntlm, 'EXCHDOM\foo', 'password')
+
+  # find a distinguished folder from any one of the mailboxes the user has permissions for
+  inbox=c.distinguished_folder_id('inbox', 'foo@bar.com')
+
+  # find some message_ids, 
+  mids = inbox.find_message_ids(:restriction=>[:<=, "item:DateTimeReceived",DateTime.now], 
+                                :sort_order=>[["item:DateTimeReceived", "Ascending"]],
+                                :indexed_page_item_view=>{:max_entries_returned=>10, :offset=>10})
+
+  # get properties for a bunch of messages in one hit
+  messages = inbox.get_messages(mids, :item_shape=>{
+                                         :base_shape=>:IdOnly,
+                                         :additional_properties=>[
+                                           [:field_uri, "item:Subject"],
+                                           [:field_uri, "item:DateTimeReceived"],
+                                           [:field_uri, "message:InternetMessageId"]]})
 
 == Note on Patches/Pull Requests
  

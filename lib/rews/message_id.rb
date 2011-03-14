@@ -13,20 +13,20 @@ module Rews
       raise "no id" if !@id
     end
 
-    def get_message
+    GET_MESSAGE_OPTS = {
+      :item_shape=>Shape::ITEM_SHAPE_OPTS,
+      :ignore_change_keys=>nil
+    }
+
+    def get_message(opts={})
       r = client.request(:wsdl, "GetItem") do
         soap.namespaces["xmlns:t"]=SCHEMA_TYPES
 
         xml = Builder::XmlMarkup.new
-        xml.wsdl :ItemShape do
-          xml.t :BaseShape, "Default"
-          xml.t :IncludeMimeContent, true
-          xml.t :AdditionalProperties do
-            xml.t :FieldURI, :FieldURI=>"item:DateTimeReceived"
-          end
-        end
+
+        xml << Shape::ItemShape.new(opts[:item_shape]||{}).to_xml
         xml.wsdl :ItemIds do
-          xml << Gyoku.xml(self.to_xml_hash)
+          xml << Gyoku.xml(self.to_xml_hash(opts[:ignore_change_keys]))
         end
 
         soap.body = xml.target!

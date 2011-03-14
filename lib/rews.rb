@@ -39,7 +39,7 @@ module Rews
     # client.distinguished_folder_id('inbox')
     # client.distinguished_folder_id('inbox', 'foo@bar.com') # to get a folder from another mailbox
     def distinguished_folder_id(id, mailbox_email=nil)
-      DistinguishedFolderId.new(client, id, mailbox_email)
+      FolderId::DistinguishedFolderId.new(client, id, mailbox_email)
     end
   end
 end
