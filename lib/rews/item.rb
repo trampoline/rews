@@ -1,13 +1,13 @@
 module Rews
-  module Message
-    class Message
+  module Item
+    class Item
       attr_reader :client
-      attr_reader :message_id
+      attr_reader :item_id
       attr_reader :attributes
       
-      def initialize(client, msg)
-        @message_id = MessageId.new(client, msg[:item_id])
-        @attributes = msg
+      def initialize(client, item)
+        @item_id = ItemId.new(client, item[:item_id])
+        @attributes = item
       end
 
       def [](key)
@@ -19,17 +19,17 @@ module Rews
       end
     end
 
-    class MessageId
+    class ItemId
       include Util
 
       attr_reader :client
       attr_reader :id
       attr_reader :change_key
       
-      def initialize(client, message_id)
+      def initialize(client, item_id)
         @client=client
-        @id = message_id[:id]
-        @change_key=message_id[:change_key]
+        @id = item_id[:id]
+        @change_key=item_id[:change_key]
         raise "no id" if !@id
       end
 
@@ -38,7 +38,7 @@ module Rews
         :ignore_change_keys=>nil
       }
 
-      def get_message(opts={})
+      def get_item(opts={})
         r = client.request(:wsdl, "GetItem") do
           soap.namespaces["xmlns:t"]=SCHEMA_TYPES
 

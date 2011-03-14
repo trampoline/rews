@@ -35,6 +35,18 @@ module Rews
         end
         @result = proc.call(view) if proc
       end
+
+      def length
+        result.length
+      end
+
+      def size
+        result.size
+      end
+
+      def [](key)
+        result[key]
+      end
     end
 
     class BaseFolderId
@@ -46,13 +58,13 @@ module Rews
         @client=client
       end
 
-      FIND_FOLDERS_OPTS = {
+      FIND_FOLDER_OPTS = {
         :restriction=>nil,
         :indexed_page_folder_view=>View::INDEXED_PAGE_VIEW_OPTS,
         :folder_shape=>Shape::FOLDER_SHAPE_OPTS}
 
-      def find_folders(opts={})
-        opts = check_opts(FIND_FOLDERS_OPTS, opts)
+      def find_folder(opts={})
+        opts = check_opts(FIND_FOLDER_OPTS, opts)
 
         r = client.request(:wsdl, "FindFolder", "Traversal"=>"Shallow") do
           soap.namespaces["xmlns:t"]=SCHEMA_TYPES
@@ -77,24 +89,26 @@ module Rews
         end
       end
 
-      def find_folder_ids(opts={})
-        opts = check_opts(FIND_FOLDERS_OPTS, opts)
+      def find_folder_id(opts={})
+        opts = check_opts(FIND_FOLDER_OPTS, opts)
 
         shape = opts[:folder_shape] ||={} 
         shape[:base_shape]||=:IdOnly
 
-        find_folders(opts).result.map!(&:folder_id)
+        r = find_folder(opts)
+        r.result.map!(&:folder_id)
+        r
       end
 
-      FIND_MESSAGES_OPTS = {
+      FIND_ITEM_OPTS = {
         :restriction=>nil,
         :sort_order=>nil,
         :indexed_page_item_view=>View::INDEXED_PAGE_VIEW_OPTS,
         :item_shape=>Shape::ITEM_SHAPE_OPTS}
 
       # find message-ids in a folder
-      def find_messages(opts={})
-        opts = check_opts(FIND_MESSAGES_OPTS, opts)
+      def find_item(opts={})
+        opts = check_opts(FIND_ITEM_OPTS, opts)
 
         r = client.request(:wsdl, "FindItem", "Traversal"=>"Shallow") do
           soap.namespaces["xmlns:t"]=SCHEMA_TYPES
@@ -117,18 +131,20 @@ module Rews
           results = view.fetch_in(:items, :message)
           results = [results] if !results.is_a?(Array)
           results.compact.map do |msg|
-            Message::Message.new(client, msg)
+            Item::Item.new(client, msg)
           end
         end
       end
 
-      def find_message_ids(opts={})
-        opts = check_opts(FIND_MESSAGES_OPTS, opts)
+      def find_item_id(opts={})
+        opts = check_opts(FIND_ITEM_OPTS, opts)
 
         shape = opts[:item_shape] ||= {}
         shape[:base_shape]||=:IdOnly
 
-        find_messages(opts).result.map!(&:message_id)
+        r = find_item(opts)
+        r.result.map!(&:item_id)
+        r
       end
 
       GET_MESSAGES_OPTS = {
@@ -137,7 +153,7 @@ module Rews
       }
 
       # get a bunch of messages in one api hit
-      def get_messages(message_ids, opts={})
+      def get_message(message_ids, opts={})
         opts = check_opts(GET_MESSAGES_OPTS, opts)
 
         r = client.request(:wsdl, "GetItem") do

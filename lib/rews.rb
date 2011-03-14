@@ -18,7 +18,7 @@ require 'rews/shape'
 require 'rews/sort_order'
 require 'rews/view'
 require 'rews/folder'
-require 'rews/message'
+require 'rews/item'
 
 module Rews
   class Client
