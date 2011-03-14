@@ -178,14 +178,14 @@ module Rews
           {
             "t:FolderId"=>"",
             :attributes! => {
-              "t:ItemId" => {
+              "t:FolderId" => {
                 "Id" => id.to_s,
                 "ChangeKey" => change_key.to_s}}}
         else
           {
             "t:FolderId"=>"",
             :attributes! => {
-              "t:ItemId" => {
+              "t:FolderId" => {
                 "Id" => id.to_s}}}
         end
       end
