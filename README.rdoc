@@ -1,6 +1,13 @@
 = rews
 
-REWS is a Ruby client for Exchange Web Services, currently focussed on retrieving email messages
+Rews is a simple Ruby client for Exchange Web Services. 
+
+* Searching, fetching and deletion are supported.
+* Filtering, ordering, and arbitrary property retrieval are supported.
+* Bulk operations are supported
+
+Method names generally follow the Exchange Web Services API
+http://msdn.microsoft.com/en-us/library/bb409286(EXCHG.140).aspx 
 
 to use : 
 
@@ -25,6 +32,10 @@ to use :
 
   # delete the items to the DeletedItems folder
   inbox.delete_item(mids, :delete_type=>:MoveToDeletedItems)
+
+== Install
+
+  gem install rews
 
 == Note on Patches/Pull Requests
  
