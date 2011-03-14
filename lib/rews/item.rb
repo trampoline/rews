@@ -1,13 +1,35 @@
 module Rews
   module Item
+    module_function
+
+    # return a list of Item objects given a hash formed from an Items element
+    def read_items(client, items)
+      items.map do |item_class,items_of_class|
+        items_of_class = [items_of_class] if !items_of_class.is_a?(Array)
+        items_of_class.map do |item|
+          Item.new(client, item_class, item)
+        end
+      end.flatten
+    end
+
+    # return a list of Item objects from a list of GetItemResponseMessages
+    def read_get_item_response_messages(client, get_item_response_messages)
+      get_item_response_messages = [get_item_response_messages] if !get_item_response_messages.is_a?(Array)
+      items = get_item_response_messages.map do |girm|
+        read_items(client, girm[:items])
+      end.flatten
+    end
+
     class Item
       attr_reader :client
       attr_reader :item_id
+      attr_reader :item_class
       attr_reader :attributes
       
-      def initialize(client, item)
-        @item_id = ItemId.new(client, item[:item_id])
-        @attributes = item
+      def initialize(client, item_class, attributes)
+        @item_id = ItemId.new(client, attributes[:item_id])
+        @item_class = item_class
+        @attributes = attributes
       end
 
       def [](key)
@@ -51,7 +73,7 @@ module Rews
 
           soap.body = xml.target!
         end
-        msgs = r.to_hash.fetch_in(:get_item_response,:response_messages,:get_item_response_message,:items,:message)
+        ::Rews::Item.read_get_item_response_messages(client, r.to_hash.fetch_in(:get_item_response,:response_messages,:get_item_response_message)).first
       end
 
       def to_xml_hash(ignore_change_key=false)

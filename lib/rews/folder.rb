@@ -128,11 +128,7 @@ module Rews
         end
         
         FindResult.new(r.to_hash.fetch_in(:find_item_response, :response_messages, :find_item_response_message, :root_folder)) do |view|
-          results = view.fetch_in(:items, :message)
-          results = [results] if !results.is_a?(Array)
-          results.compact.map do |msg|
-            Item::Item.new(client, msg)
-          end
+          results = Item.read_items(client, view[:items])
         end
       end
 
@@ -153,7 +149,7 @@ module Rews
       }
 
       # get a bunch of messages in one api hit
-      def get_message(message_ids, opts={})
+      def get_item(message_ids, opts={})
         opts = check_opts(GET_MESSAGES_OPTS, opts)
 
         r = client.request(:wsdl, "GetItem") do
@@ -170,11 +166,7 @@ module Rews
 
           soap.body = xml.target!
         end
-        msgs = r.to_hash.fetch_in(:get_item_response,:response_messages,:get_item_response_message)
-        msgs = [msgs] if !msgs.is_a?(Array)
-        msgs.compact.map do |msg|
-          msg.fetch_in(:items, :message)
-        end
+        Item.read_get_item_response_messages(client, r.to_hash.fetch_in(:get_item_response,:response_messages,:get_item_response_message))
       end
     end
 
