@@ -18,7 +18,7 @@ module Rews
       attr_reader :view
     end
 
-    INDEXED_PAGE_VIEW_OPTS = {:max_entries_returned=>nil, :offset=>0, :base_point=>"Beginning"}
+    INDEXED_PAGE_VIEW_OPTS = {:max_entries_returned=>nil, :offset=>0, :base_point=>:Beginning}
 
     class IndexedPageItemView < Base
       def initialize(view)

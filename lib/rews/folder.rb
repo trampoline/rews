@@ -1,6 +1,43 @@
 module Rews
-  module FolderId
-    class Base
+  module Folder
+    class Folder
+      attr_reader :client
+      attr_reader :folder_id
+      attr_reader :attributes
+
+      def initialize(client, folder)
+        @folder_id = VanillaFolderId.new(client, folder[:folder_id])
+        @attributes = folder
+      end
+
+      def [](key)
+        @attributes[key]
+      end
+
+      def keys
+        @attributes.keys
+      end
+    end
+
+    class FindResult
+      VIEW_ATTRS = [:includes_last_item_in_range,
+                    :indexed_paging_offset,
+                    :total_items_in_view]
+
+      VIEW_ATTRS.each do |attr|
+        attr_reader attr
+      end
+      attr_reader :result
+
+      def initialize(view, &proc)
+        VIEW_ATTRS.each do |attr|
+          self.instance_variable_set("@#{attr}", view[attr])
+        end
+        @result = proc.call(view) if proc
+      end
+    end
+
+    class BaseFolderId
       include Util
       
       attr_reader :client
@@ -9,13 +46,13 @@ module Rews
         @client=client
       end
 
-      FIND_FOLDER_ID_OPTS = {
+      FIND_FOLDERS_OPTS = {
         :restriction=>nil,
         :indexed_page_folder_view=>View::INDEXED_PAGE_VIEW_OPTS,
         :folder_shape=>Shape::FOLDER_SHAPE_OPTS}
 
-      def find_folder_ids(opts={})
-        opts = check_opts(FIND_FOLDER_ID_OPTS, opts)
+      def find_folders(opts={})
+        opts = check_opts(FIND_FOLDERS_OPTS, opts)
 
         r = client.request(:wsdl, "FindFolder", "Traversal"=>"Shallow") do
           soap.namespaces["xmlns:t"]=SCHEMA_TYPES
@@ -31,23 +68,33 @@ module Rews
           soap.body = xml.target!
         end
 
-        folders = [*r.to_hash.fetch_in(:find_folder_response, :response_messages, :find_folder_response_message, :root_folder, :folders, :folder)].compact
-        if folders
-          folders.map do |folder| 
-            VanillaFolderId.new(client, folder[:folder_id][:id], folder[:folder_id][:change_key])
+        FindResult.new(r.to_hash.fetch_in(:find_folder_response, :response_messages, :find_folder_response_message, :root_folder)) do |view|
+          results = view.fetch_in(:folders, :folder)
+          results = [results] if !results.is_a?(Array)
+          results.compact.map do |folder|
+            Folder.new(client, folder)
           end
         end
       end
 
-      FIND_MESSAGE_IDS_OPTS = {
+      def find_folder_ids(opts={})
+        opts = check_opts(FIND_FOLDERS_OPTS, opts)
+
+        shape = opts[:folder_shape] ||={} 
+        shape[:base_shape]||=:IdOnly
+
+        find_folders(opts).result.map!(&:folder_id)
+      end
+
+      FIND_MESSAGES_OPTS = {
         :restriction=>nil,
         :sort_order=>nil,
         :indexed_page_item_view=>View::INDEXED_PAGE_VIEW_OPTS,
         :item_shape=>Shape::ITEM_SHAPE_OPTS}
 
       # find message-ids in a folder
-      def find_message_ids(opts={})
-        opts = check_opts(FIND_MESSAGE_IDS_OPTS, opts)
+      def find_messages(opts={})
+        opts = check_opts(FIND_MESSAGES_OPTS, opts)
 
         r = client.request(:wsdl, "FindItem", "Traversal"=>"Shallow") do
           soap.namespaces["xmlns:t"]=SCHEMA_TYPES
@@ -65,10 +112,23 @@ module Rews
 
           soap.body = xml.target!
         end
-        msgs = [*r.to_hash.fetch_in(:find_item_response, :response_messages, :find_item_response_message, :root_folder, :items, :message)].compact
-        msgs.map do |msg|
-          MessageId.new(client, msg[:item_id][:id], msg[:item_id][:change_key])
+        
+        FindResult.new(r.to_hash.fetch_in(:find_item_response, :response_messages, :find_item_response_message, :root_folder)) do |view|
+          results = view.fetch_in(:items, :message)
+          results = [results] if !results.is_a?(Array)
+          results.compact.map do |msg|
+            Message::Message.new(client, msg)
+          end
         end
+      end
+
+      def find_message_ids(opts={})
+        opts = check_opts(FIND_MESSAGES_OPTS, opts)
+
+        shape = opts[:item_shape] ||= {}
+        shape[:base_shape]||=:IdOnly
+
+        find_messages(opts).result.map!(&:message_id)
       end
 
       GET_MESSAGES_OPTS = {
@@ -95,20 +155,21 @@ module Rews
           soap.body = xml.target!
         end
         msgs = r.to_hash.fetch_in(:get_item_response,:response_messages,:get_item_response_message)
-        msgs.map do |msg|
+        msgs = [msgs] if !msgs.is_a?(Array)
+        msgs.compact.map do |msg|
           msg.fetch_in(:items, :message)
         end
       end
     end
 
-    class VanillaFolderId < Base
+    class VanillaFolderId < BaseFolderId
       attr_reader :id
       attr_reader :change_key
 
-      def initialize(client, id, change_key=nil)
+      def initialize(client, folder_id)
         super(client)
-        @id=id
-        @change_key=change_key
+        @id=folder_id[:id]
+        @change_key=folder_id[:change_key]
         raise "no id" if !@id
       end
 
@@ -134,7 +195,7 @@ module Rews
       end
     end
 
-    class DistinguishedFolderId < Base
+    class DistinguishedFolderId < BaseFolderId
       attr_reader :id
       attr_reader :mailbox_email
 
