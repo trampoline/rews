@@ -143,14 +143,15 @@ module Rews
         r
       end
 
-      GET_MESSAGES_OPTS = {
+      GET_ITEM_OPTS = {
         :item_shape=>Shape::ITEM_SHAPE_OPTS,
         :ignore_change_keys=>nil
       }
 
       # get a bunch of messages in one api hit
       def get_item(message_ids, opts={})
-        opts = check_opts(GET_MESSAGES_OPTS, opts)
+        opts = check_opts(GET_ITEM_OPTS, opts)
+        message_ids = message_ids.result if message_ids.is_a?(FindResult)
 
         r = client.request(:wsdl, "GetItem") do
           soap.namespaces["xmlns:t"]=SCHEMA_TYPES
@@ -167,6 +168,30 @@ module Rews
           soap.body = xml.target!
         end
         Item.read_get_item_response_messages(client, r.to_hash.fetch_in(:get_item_response,:response_messages,:get_item_response_message))
+      end
+
+      DELETE_ITEM_OPTS = {
+        :delete_type! =>nil,
+        :ignore_change_keys=>false
+      }
+
+      def delete_item(message_ids, opts={})
+        opts = check_opts(DELETE_ITEM_OPTS, opts)
+        message_ids = message_ids.result if message_ids.is_a?(FindResult)
+
+        r = client.request(:wsdl, "DeleteItem", :DeleteType=>opts[:delete_type]) do
+          soap.namespaces["xmlns:t"]=SCHEMA_TYPES
+          
+          xml = Builder::XmlMarkup.new
+
+          xml.wsdl :ItemIds do
+            message_ids.each do |mid|
+              xml << Gyoku.xml(mid.to_xml_hash(opts[:ignore_change_keys]))
+            end
+          end
+
+          soap.body = xml.target!
+        end
       end
     end
 

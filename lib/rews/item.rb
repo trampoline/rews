@@ -55,12 +55,13 @@ module Rews
         raise "no id" if !@id
       end
 
-      GET_MESSAGE_OPTS = {
+      GET_ITEM_OPTS = {
         :item_shape=>Shape::ITEM_SHAPE_OPTS,
         :ignore_change_keys=>nil
       }
 
       def get_item(opts={})
+        opts = check_opts(GET_ITEM_OPTS, opts)
         r = client.request(:wsdl, "GetItem") do
           soap.namespaces["xmlns:t"]=SCHEMA_TYPES
 
@@ -74,6 +75,26 @@ module Rews
           soap.body = xml.target!
         end
         ::Rews::Item.read_get_item_response_messages(client, r.to_hash.fetch_in(:get_item_response,:response_messages,:get_item_response_message)).first
+      end
+
+      DELETE_ITEM_OPTS = {
+        :delete_type! =>nil,
+        :ignore_change_keys=>false
+      }
+
+      def delete_item(opts={})
+        opts = check_opts(DELETE_ITEM_OPTS, opts)
+        r = client.request(:wsdl, "DeleteItem", :DeleteType=>opts[:delete_type]) do
+          soap.namespaces["xmlns:t"]=SCHEMA_TYPES
+
+          xml = Builder::XmlMarkup.new
+
+          xml.wsdl :ItemIds do
+            xml << Gyoku.xml(self.to_xml_hash(opts[:ignore_change_keys]))
+          end
+
+          soap.body = xml.target!
+        end
       end
 
       def to_xml_hash(ignore_change_key=false)

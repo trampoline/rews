@@ -11,17 +11,17 @@ to use :
   inbox=c.distinguished_folder_id('inbox', 'foo@bar.com')
 
   # find some message_ids, 
-  mids = inbox.find_message_ids(:restriction=>[:<=, "item:DateTimeReceived",DateTime.now], 
-                                :sort_order=>[["item:DateTimeReceived", "Ascending"]],
-                                :indexed_page_item_view=>{:max_entries_returned=>10, :offset=>10})
+  mids = inbox.find_item_id(:restriction=>[:<=, "item:DateTimeReceived",DateTime.now], 
+                            :sort_order=>[["item:DateTimeReceived", "Ascending"]],
+                            :indexed_page_item_view=>{:max_entries_returned=>10, :offset=>10})
 
-  # get properties for a bunch of messages in one hit
-  messages = inbox.get_messages(mids, :item_shape=>{
-                                         :base_shape=>:IdOnly,
-                                         :additional_properties=>[
-                                           [:field_uri, "item:Subject"],
-                                           [:field_uri, "item:DateTimeReceived"],
-                                           [:field_uri, "message:InternetMessageId"]]})
+  # get some properties for a bunch of messages in one hit
+  messages = inbox.get_item(mids, :item_shape=>{
+                                    :base_shape=>:IdOnly,
+                                    :additional_properties=>[
+                                      [:field_uri, "item:Subject"],
+                                      [:field_uri, "item:DateTimeReceived"],
+                                      [:field_uri, "message:InternetMessageId"]]})
 
 == Note on Patches/Pull Requests
  
