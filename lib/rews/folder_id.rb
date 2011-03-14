@@ -12,8 +12,8 @@ module Rews
 
     FIND_FOLDER_ID_OPTS = {
       :restriction=>nil,
-      :sort_order=>nil,
-      :indexed_page_item_view=>INDEXED_PAGE_ITEM_VIEW_OPTS}
+      :indexed_page_item_view=>INDEXED_PAGE_ITEM_VIEW_OPTS,
+      :folder_shape=>Shape::FOLDER_SHAPE_OPTS}
 
     def find_folder_ids(opts={})
       opts = check_opts(FIND_FOLDER_ID_OPTS, opts)
@@ -21,8 +21,12 @@ module Rews
       r = client.request(:wsdl, "FindFolder", "Traversal"=>"Shallow") do
         soap.namespaces["xmlns:t"]=SCHEMA_TYPES
         xml = Builder::XmlMarkup.new
-        xml.wsdl :FolderShape do
-          xml.t :BaseShape, "IdOnly"
+
+        shape = Shape::FolderShape.new(opts[:folder_shape]||{})
+        xml << shape.to_xml
+
+        if opts[:restriction]
+          xml << Restriction.new(opts[:restriction]).to_xml
         end
         xml.wsdl :ParentFolderIds do
           xml << Gyoku.xml(self.to_xml_hash)
@@ -41,7 +45,8 @@ module Rews
     FIND_MESSAGE_IDS_OPTS = {
       :restriction=>nil,
       :sort_order=>nil,
-      :indexed_page_item_view=>INDEXED_PAGE_ITEM_VIEW_OPTS}
+      :indexed_page_item_view=>INDEXED_PAGE_ITEM_VIEW_OPTS,
+      :item_shape=>Shape::ITEM_SHAPE_OPTS}
 
     # find message-ids in a folder
     def find_message_ids(opts={})
@@ -52,9 +57,9 @@ module Rews
         
         xml = Builder::XmlMarkup.new
         
-        xml.wsdl :ItemShape do
-          xml.t :BaseShape, "IdOnly"
-        end
+        shape = Shape::ItemShape.new(opts[:item_shape]||{})
+        xml << shape.to_xml
+
         if opts[:indexed_page_item_view]
           o = opts[:indexed_page_item_view]
           attrs = {}
@@ -81,19 +86,22 @@ module Rews
       end
     end
 
+    GET_MESSAGES_OPTS = {
+      :item_shape=>Shape::ITEM_SHAPE_OPTS
+    }
+
     # get a bunch of messages in one api hit
-    def get_messages(message_ids)
+    def get_messages(message_ids, opts={})
+      opts = check_opts(GET_MESSAGES_OPTS, opts)
+
       r = client.request(:wsdl, "GetItem") do
         soap.namespaces["xmlns:t"]=SCHEMA_TYPES
         
         xml = Builder::XmlMarkup.new
-        xml.wsdl :ItemShape do
-          xml.t :BaseShape, "Default"
-          xml.t :IncludeMimeContent, true
-          xml.t :AdditionalProperties do
-            xml.t :FieldURI, :FieldURI=>"item:DateTimeReceived"
-          end
-        end
+
+        shape = Shape::ItemShape.new(opts[:item_shape]||{})
+        xml << shape.to_xml
+
         xml.wsdl :ItemIds do
           message_ids.each do |mid|
             xml << Gyoku.xml(mid.to_xml_hash)
