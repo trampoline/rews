@@ -49,5 +49,23 @@ module Rews
     def camel_keys(h)
       Hash[h.map{|k,v| [camelize(k.to_s), v]}]
     end
+
+    def with_error_check(client, *response_msg_keys)
+      raise "no block" if !block_given?
+
+      response = yield
+
+      status = response.to_hash.fetch_in(*response_msg_keys)
+
+      raise "no response_class found: #{response.inspect}" if !status[:response_class]
+
+      if status[:response_class] == "Error"
+        raise "Rews: #{status[:response_code]} - #{status[:message_text]}"
+      elsif status[:response_class] == "Warning"
+        client.log{|logger| logger.warn("#{status[:message_text]}")}
+      end
+
+      status
+    end
   end
 end

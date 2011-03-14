@@ -23,6 +23,7 @@ require 'rews/item'
 module Rews
   class Client
     attr_reader :client
+    attr_accessor :logdev
 
     # Rews::Client.new('https://exchange.foo.com/EWS/Exchange.asmx', :ntlm, 'DOMAIN\\user', 'password')
     # Rews::Client.new('https://exchange.foo.com/EWS/Exchange.asmx', :basic, 'DOMAIN\\user', 'password')
@@ -40,6 +41,15 @@ module Rews
     # client.distinguished_folder_id('inbox', 'foo@bar.com') # to get a folder from another mailbox
     def distinguished_folder_id(id, mailbox_email=nil)
       Folder::DistinguishedFolderId.new(client, id, mailbox_email)
+    end
+
+    def log
+      yield logger if @logdev
+    end
+
+    def logger
+      return @logger if @logger
+      @logger = Logger.new(@logdev) if @logdev
     end
   end
 end

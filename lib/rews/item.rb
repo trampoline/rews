@@ -62,19 +62,21 @@ module Rews
 
       def get_item(opts={})
         opts = check_opts(GET_ITEM_OPTS, opts)
-        r = client.request(:wsdl, "GetItem") do
-          soap.namespaces["xmlns:t"]=SCHEMA_TYPES
-
-          xml = Builder::XmlMarkup.new
-
-          xml << Shape::ItemShape.new(opts[:item_shape]||{}).to_xml
-          xml.wsdl :ItemIds do
-            xml << Gyoku.xml(self.to_xml_hash(opts[:ignore_change_keys]))
+        r = with_error_check(client, :get_item_response,:response_messages,:get_item_response_message) do
+          client.request(:wsdl, "GetItem") do
+            soap.namespaces["xmlns:t"]=SCHEMA_TYPES
+            
+            xml = Builder::XmlMarkup.new
+            
+            xml << Shape::ItemShape.new(opts[:item_shape]||{}).to_xml
+            xml.wsdl :ItemIds do
+              xml << Gyoku.xml(self.to_xml_hash(opts[:ignore_change_keys]))
+            end
+            
+            soap.body = xml.target!
           end
-
-          soap.body = xml.target!
         end
-        ::Rews::Item.read_get_item_response_messages(client, r.to_hash.fetch_in(:get_item_response,:response_messages,:get_item_response_message)).first
+        ::Rews::Item.read_get_item_response_messages(client, r).first
       end
 
       DELETE_ITEM_OPTS = {
@@ -84,17 +86,20 @@ module Rews
 
       def delete_item(opts={})
         opts = check_opts(DELETE_ITEM_OPTS, opts)
-        r = client.request(:wsdl, "DeleteItem", :DeleteType=>opts[:delete_type]) do
-          soap.namespaces["xmlns:t"]=SCHEMA_TYPES
-
-          xml = Builder::XmlMarkup.new
-
-          xml.wsdl :ItemIds do
-            xml << Gyoku.xml(self.to_xml_hash(opts[:ignore_change_keys]))
+        r = with_error_check(client, :delete_item_response, :response_messages, :delete_item_response_message) do
+          client.request(:wsdl, "DeleteItem", :DeleteType=>opts[:delete_type]) do
+            soap.namespaces["xmlns:t"]=SCHEMA_TYPES
+            
+            xml = Builder::XmlMarkup.new
+            
+            xml.wsdl :ItemIds do
+              xml << Gyoku.xml(self.to_xml_hash(opts[:ignore_change_keys]))
+            end
+            
+            soap.body = xml.target!
           end
-
-          soap.body = xml.target!
         end
+        true
       end
 
       def to_xml_hash(ignore_change_key=false)

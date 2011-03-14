@@ -23,6 +23,9 @@ to use :
                                       [:field_uri, "item:DateTimeReceived"],
                                       [:field_uri, "message:InternetMessageId"]]})
 
+  # delete the items to the DeletedItems folder
+  inbox.delete_item(mids, :delete_type=>:MoveToDeletedItems)
+
 == Note on Patches/Pull Requests
  
 * Fork the project.

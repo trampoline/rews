@@ -66,21 +66,23 @@ module Rews
       def find_folder(opts={})
         opts = check_opts(FIND_FOLDER_OPTS, opts)
 
-        r = client.request(:wsdl, "FindFolder", "Traversal"=>"Shallow") do
-          soap.namespaces["xmlns:t"]=SCHEMA_TYPES
-          xml = Builder::XmlMarkup.new
-
-          xml << Shape::FolderShape.new(opts[:folder_shape]||{}).to_xml
-          xml << View::IndexedPageFolderView.new(opts[:indexed_page_folder_view]).to_xml if opts[:indexed_page_folder_view]
-          xml << Restriction.new(opts[:restriction]).to_xml if opts[:restriction]
-
-          xml.wsdl :ParentFolderIds do
-            xml << Gyoku.xml(self.to_xml_hash)
+        r = with_error_check(client, :find_folder_response, :response_messages, :find_folder_response_message) do
+          client.request(:wsdl, "FindFolder", "Traversal"=>"Shallow") do
+            soap.namespaces["xmlns:t"]=SCHEMA_TYPES
+            xml = Builder::XmlMarkup.new
+            
+            xml << Shape::FolderShape.new(opts[:folder_shape]||{}).to_xml
+            xml << View::IndexedPageFolderView.new(opts[:indexed_page_folder_view]).to_xml if opts[:indexed_page_folder_view]
+            xml << Restriction.new(opts[:restriction]).to_xml if opts[:restriction]
+            
+            xml.wsdl :ParentFolderIds do
+              xml << Gyoku.xml(self.to_xml_hash)
+            end
+            soap.body = xml.target!
           end
-          soap.body = xml.target!
         end
 
-        FindResult.new(r.to_hash.fetch_in(:find_folder_response, :response_messages, :find_folder_response_message, :root_folder)) do |view|
+        FindResult.new(r.fetch_in(:root_folder)) do |view|
           results = view.fetch_in(:folders, :folder)
           results = [results] if !results.is_a?(Array)
           results.compact.map do |folder|
@@ -110,24 +112,26 @@ module Rews
       def find_item(opts={})
         opts = check_opts(FIND_ITEM_OPTS, opts)
 
-        r = client.request(:wsdl, "FindItem", "Traversal"=>"Shallow") do
-          soap.namespaces["xmlns:t"]=SCHEMA_TYPES
-          
-          xml = Builder::XmlMarkup.new
-          
-          xml << Shape::ItemShape.new(opts[:item_shape]||{}).to_xml
-          xml << View::IndexedPageItemView.new(opts[:indexed_page_item_view]).to_xml if opts[:indexed_page_item_view]
-          xml << Restriction.new(opts[:restriction]).to_xml if opts[:restriction]
-          xml << SortOrder.new(opts[:sort_order]).to_xml if opts[:sort_order]
+        r = with_error_check(client, :find_item_response, :response_messages, :find_item_response_message) do
+          client.request(:wsdl, "FindItem", "Traversal"=>"Shallow") do
+            soap.namespaces["xmlns:t"]=SCHEMA_TYPES
+            
+            xml = Builder::XmlMarkup.new
+            
+            xml << Shape::ItemShape.new(opts[:item_shape]||{}).to_xml
+            xml << View::IndexedPageItemView.new(opts[:indexed_page_item_view]).to_xml if opts[:indexed_page_item_view]
+            xml << Restriction.new(opts[:restriction]).to_xml if opts[:restriction]
+            xml << SortOrder.new(opts[:sort_order]).to_xml if opts[:sort_order]
 
-          xml.wsdl :ParentFolderIds do
-            xml << Gyoku.xml(self.to_xml_hash)
+            xml.wsdl :ParentFolderIds do
+              xml << Gyoku.xml(self.to_xml_hash)
+            end
+
+            soap.body = xml.target!
           end
-
-          soap.body = xml.target!
         end
         
-        FindResult.new(r.to_hash.fetch_in(:find_item_response, :response_messages, :find_item_response_message, :root_folder)) do |view|
+        FindResult.new(r.to_hash.fetch_in(:root_folder)) do |view|
           results = Item.read_items(client, view[:items])
         end
       end
@@ -153,21 +157,23 @@ module Rews
         opts = check_opts(GET_ITEM_OPTS, opts)
         message_ids = message_ids.result if message_ids.is_a?(FindResult)
 
-        r = client.request(:wsdl, "GetItem") do
-          soap.namespaces["xmlns:t"]=SCHEMA_TYPES
-          
-          xml = Builder::XmlMarkup.new
+        r = with_error_check(client, :get_item_response,:response_messages,:get_item_response_message) do
+          client.request(:wsdl, "GetItem") do
+            soap.namespaces["xmlns:t"]=SCHEMA_TYPES
+            
+            xml = Builder::XmlMarkup.new
 
-          xml << Shape::ItemShape.new(opts[:item_shape]||{}).to_xml
-          xml.wsdl :ItemIds do
-            message_ids.each do |mid|
-              xml << Gyoku.xml(mid.to_xml_hash(opts[:ignore_change_keys]))
+            xml << Shape::ItemShape.new(opts[:item_shape]||{}).to_xml
+            xml.wsdl :ItemIds do
+              message_ids.each do |mid|
+                xml << Gyoku.xml(mid.to_xml_hash(opts[:ignore_change_keys]))
+              end
             end
-          end
 
-          soap.body = xml.target!
+            soap.body = xml.target!
+          end
         end
-        Item.read_get_item_response_messages(client, r.to_hash.fetch_in(:get_item_response,:response_messages,:get_item_response_message))
+        Item.read_get_item_response_messages(client, r)
       end
 
       DELETE_ITEM_OPTS = {
@@ -179,19 +185,22 @@ module Rews
         opts = check_opts(DELETE_ITEM_OPTS, opts)
         message_ids = message_ids.result if message_ids.is_a?(FindResult)
 
-        r = client.request(:wsdl, "DeleteItem", :DeleteType=>opts[:delete_type]) do
-          soap.namespaces["xmlns:t"]=SCHEMA_TYPES
-          
-          xml = Builder::XmlMarkup.new
+        r = with_error_check(client, :delete_item_response, :response_messages, :delete_item_response_message) do
+          client.request(:wsdl, "DeleteItem", :DeleteType=>opts[:delete_type]) do
+            soap.namespaces["xmlns:t"]=SCHEMA_TYPES
+            
+            xml = Builder::XmlMarkup.new
 
-          xml.wsdl :ItemIds do
-            message_ids.each do |mid|
-              xml << Gyoku.xml(mid.to_xml_hash(opts[:ignore_change_keys]))
+            xml.wsdl :ItemIds do
+              message_ids.each do |mid|
+                xml << Gyoku.xml(mid.to_xml_hash(opts[:ignore_change_keys]))
+              end
             end
-          end
 
-          soap.body = xml.target!
+            soap.body = xml.target!
+          end
         end
+        true
       end
     end
 
