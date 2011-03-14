@@ -20,7 +20,7 @@ to use :
   # find some message_ids, 
   mids = inbox.find_item_id(:restriction=>[:<=, "item:DateTimeReceived",DateTime.now], 
                             :sort_order=>[["item:DateTimeReceived", "Ascending"]],
-                            :indexed_page_item_view=>{:max_entries_returned=>10, :offset=>10})
+                            :indexed_page_item_view=>{:max_entries_returned=>10, :offset=>0})
 
   # get some properties for a bunch of messages in one hit
   messages = inbox.get_item(mids, :item_shape=>{

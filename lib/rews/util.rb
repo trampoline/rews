@@ -54,18 +54,33 @@ module Rews
       raise "no block" if !block_given?
 
       response = yield
+      hash_response = response.to_hash
+      statuses = hash_response.fetch_in(*response_msg_keys)
 
-      status = response.to_hash.fetch_in(*response_msg_keys)
+      if statuses.is_a?(Array)
+        all_statuses = statuses
+      else
+        all_statuses = [statuses]
+      end
 
-      raise "no response_class found: #{response.inspect}" if !status[:response_class]
+      errors = all_statuses.map{|s| single_error_check(client, s)}.compact
+      raise errors.join("\n") if !errors.empty?
+
+      statuses
+    end
+
+    def single_error_check(client, status)
+      begin
+        response_class = status[:response_class]
+      rescue
+        raise "no response_class found: #{status.inspect}" if !response_class
+      end
 
       if status[:response_class] == "Error"
-        raise "Rews: #{status[:response_code]} - #{status[:message_text]}"
+        return "Rews: #{status[:response_code]} - #{status[:message_text]}"
       elsif status[:response_class] == "Warning"
         client.log{|logger| logger.warn("#{status[:message_text]}")}
       end
-
-      status
     end
   end
 end
