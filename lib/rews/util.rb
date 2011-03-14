@@ -41,5 +41,13 @@ module Rews
         k.to_s[0...-1]
       end
     end
+
+    def camelize(s)
+      s.split('_').map(&:capitalize).join
+    end
+
+    def camel_keys(h)
+      Hash[h.map{|k,v| [camelize(k.to_s), v]}]
+    end
   end
 end

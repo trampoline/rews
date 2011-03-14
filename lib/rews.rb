@@ -16,6 +16,7 @@ require 'rews/util'
 require 'rews/restriction'
 require 'rews/shape'
 require 'rews/sort_order'
+require 'rews/view'
 require 'rews/folder_id'
 require 'rews/message_id'
 

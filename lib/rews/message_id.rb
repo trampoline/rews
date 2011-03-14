@@ -34,8 +34,8 @@ module Rews
       msgs = r.to_hash.fetch_in(:get_item_response,:response_messages,:get_item_response_message,:items,:message)
     end
 
-    def to_xml_hash
-      if change_key
+    def to_xml_hash(ignore_change_key=false)
+      if change_key && !ignore_change_key
         {
           "t:ItemId"=>"",
           :attributes! => {

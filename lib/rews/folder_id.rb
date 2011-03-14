@@ -8,11 +8,9 @@ module Rews
       @client=client
     end
 
-    INDEXED_PAGE_ITEM_VIEW_OPTS = {:max_entries_returned=>nil, :offset=>0, :base_point=>"Beginning"}
-
     FIND_FOLDER_ID_OPTS = {
       :restriction=>nil,
-      :indexed_page_item_view=>INDEXED_PAGE_ITEM_VIEW_OPTS,
+      :indexed_page_item_view=>View::INDEXED_PAGE_VIEW_OPTS,
       :folder_shape=>Shape::FOLDER_SHAPE_OPTS}
 
     def find_folder_ids(opts={})
@@ -22,12 +20,10 @@ module Rews
         soap.namespaces["xmlns:t"]=SCHEMA_TYPES
         xml = Builder::XmlMarkup.new
 
-        shape = Shape::FolderShape.new(opts[:folder_shape]||{})
-        xml << shape.to_xml
+        xml << Shape::FolderShape.new(opts[:folder_shape]||{}).to_xml
+        xml << View::IndexedPageFolderView.new(opts[:indexed_page_folder_view]).to_xml if opts[:indexed_page_folder_view]
+        xml << Restriction.new(opts[:restriction]).to_xml if opts[:restriction]
 
-        if opts[:restriction]
-          xml << Restriction.new(opts[:restriction]).to_xml
-        end
         xml.wsdl :ParentFolderIds do
           xml << Gyoku.xml(self.to_xml_hash)
         end
@@ -45,7 +41,7 @@ module Rews
     FIND_MESSAGE_IDS_OPTS = {
       :restriction=>nil,
       :sort_order=>nil,
-      :indexed_page_item_view=>INDEXED_PAGE_ITEM_VIEW_OPTS,
+      :indexed_page_item_view=>View::INDEXED_PAGE_VIEW_OPTS,
       :item_shape=>Shape::ITEM_SHAPE_OPTS}
 
     # find message-ids in a folder
@@ -57,23 +53,11 @@ module Rews
         
         xml = Builder::XmlMarkup.new
         
-        shape = Shape::ItemShape.new(opts[:item_shape]||{})
-        xml << shape.to_xml
+        xml << Shape::ItemShape.new(opts[:item_shape]||{}).to_xml
+        xml << View::IndexedPageItemView.new(opts[:indexed_page_item_view]).to_xml if opts[:indexed_page_item_view]
+        xml << Restriction.new(opts[:restriction]).to_xml if opts[:restriction]
+        xml << SortOrder.new(opts[:sort_order]).to_xml if opts[:sort_order]
 
-        if opts[:indexed_page_item_view]
-          o = opts[:indexed_page_item_view]
-          attrs = {}
-          attrs["MaxEntriesReturned"] = o[:max_entries_returned] if o[:max_entries_returned]
-          attrs["Offset"] = o[:offset]
-          attrs["BasePoint"] = o[:base_point]
-          xml.wsdl :IndexedPageItemView, attrs
-        end
-        if opts[:restriction]
-          xml << Restriction.new(opts[:restriction]).to_xml
-        end
-        if opts[:sort_order]
-          xml << SortOrder.new(opts[:sort_order]).to_xml
-        end
         xml.wsdl :ParentFolderIds do
           xml << Gyoku.xml(self.to_xml_hash)
         end
@@ -87,7 +71,8 @@ module Rews
     end
 
     GET_MESSAGES_OPTS = {
-      :item_shape=>Shape::ITEM_SHAPE_OPTS
+      :item_shape=>Shape::ITEM_SHAPE_OPTS,
+      :ignore_change_keys=>nil
     }
 
     # get a bunch of messages in one api hit
@@ -99,12 +84,11 @@ module Rews
         
         xml = Builder::XmlMarkup.new
 
-        shape = Shape::ItemShape.new(opts[:item_shape]||{})
-        xml << shape.to_xml
+        xml << Shape::ItemShape.new(opts[:item_shape]||{}).to_xml
 
         xml.wsdl :ItemIds do
           message_ids.each do |mid|
-            xml << Gyoku.xml(mid.to_xml_hash)
+            xml << Gyoku.xml(mid.to_xml_hash(opts[:ignore_change_keys]))
           end
         end
 
