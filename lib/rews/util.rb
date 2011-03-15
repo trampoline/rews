@@ -77,9 +77,9 @@ module Rews
       end
 
       if status[:response_class] == "Error"
-        return "Rews: #{status[:response_code]} - #{status[:message_text]}"
+        return "#{status[:response_code]} - #{status[:message_text]}"
       elsif status[:response_class] == "Warning"
-        client.log{|logger| logger.warn("#{status[:message_text]}")}
+        client.log{|logger| logger.warn("#{status[:response_code]} - #{status[:message_text]}")}
       end
     end
   end

@@ -27,20 +27,50 @@ module Rews
 
     describe "with_error_check" do
       it "should yield, convert the response to a hash and fetch_in the status" do
+        client = Object.new
+        Util.with_error_check(client, :foo, :bar) do
+          response_hash = {:foo=>{:bar=>{:response_class=>"Success"}}}
+          response = Object.new
+          mock(response).to_hash{response_hash}
+          response
+        end
       end
 
       it "should raise if there are any errors" do
+        client = Object.new
+        lambda {
+          Util.with_error_check(client, :foo, :bar) do
+            response_hash = {:foo=>{:bar=>{:response_class=>"Error", :message_text=>"boo"}}}
+            response = Object.new
+            mock(response).to_hash{response_hash}
+            response
+          end
+        }.should raise_error
       end
     end
 
     describe "single_error_check" do
-      it "should raise an error description of the response_class is Error" do
+      it "should return an error description of the response_class is Error" do
+        client = Object.new
+        status = {:response_class=>"Error", :message_text=>"boo", :response_code=>"BooError"}
+        Util.single_error_check(client, status).should == "BooError - boo"
       end
 
       it "should log a warning and return if the response_class is Warning" do
+        client = Object.new
+        status = {:response_class=>"Warning", :message_text=>"boo", :response_code=>"BooWarning"}
+        mock(client).log() do |p|
+          logger = Object.new
+          mock(logger).warn("BooWarning - boo")
+          p.call(logger)
+        end
+        Util.single_error_check(client, status).should == nil
       end
 
       it "should return if the response_class is Success" do
+        client = Object.new
+        status = {:response_class=>"Success", :message_text=>nil, :response_code=>"Blah"}
+        Util.single_error_check(client, status).should == nil
       end
     end
   end
