@@ -3,7 +3,7 @@ require File.expand_path("../../spec_helper", __FILE__)
 module Rews
   describe Item do
     describe Item::Item do
-      it "should parse the item_id and attributes frmo the XML hash" do
+      it "should parse the item_id and attributes from the XML hash" do
         client = Object.new
 
         i = Item::Item.new(client, 'Message', {:item_id=>{:id=>'1234', :change_key=>'abcd'}, :foo=>100})
@@ -40,7 +40,7 @@ module Rews
         end
       end
 
-      def test_request(client, action, attrs, response)
+      def mock_request(client, action, attrs, response)
         # deal with different call arity
         mock(client).request(*[:wsdl, action, attrs].compact) do |*args|
           block = args.last # block is the last arg
@@ -69,7 +69,7 @@ module Rews
           response = Object.new
           mock(response).to_hash{{:get_item_response=>{:response_messages=>{:get_item_response_message=>{:response_class=>"Success", :items=>result}}}}}
 
-          test_request(client, "GetItem", nil, response)
+          mock_request(client, "GetItem", nil, response)
 
           opts={}
           opts[:item_shape]=item_shape if item_shape
@@ -107,7 +107,7 @@ module Rews
           response = Object.new
           mock(response).to_hash{{:delete_item_response=>{:response_messages=>{:delete_item_response_message=>{:response_class=>"Success"}}}}}
 
-          test_request(client, "DeleteItem", {:DeleteType=>delete_type}, response)
+          mock_request(client, "DeleteItem", {:DeleteType=>delete_type}, response)
 
           opts={}
           opts[:ignore_change_keys]=ignore_change_keys if ignore_change_keys
@@ -118,7 +118,6 @@ module Rews
         it "should generate the ItemId xml and parse the response" do
           client = Object.new
           msg = test_delete_item(client, true, :HardDelete)
-          
         end
       end
     end

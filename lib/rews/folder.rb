@@ -225,6 +225,11 @@ module Rews
         raise "no id" if !@id
       end
 
+      def ==(other)
+        @id == other.id &&
+          @change_key == other.change_key
+      end
+
       def to_xml
         xml = Builder::XmlMarkup.new
         attrs = {:Id=>id.to_s}
