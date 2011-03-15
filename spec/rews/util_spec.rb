@@ -73,5 +73,27 @@ module Rews
         Util.single_error_check(client, status).should == nil
       end
     end
+
+    describe "check_opts" do
+      it "should raise if given an unknown option" do
+        lambda {
+          Util.check_opts({:foo=>nil}, {:foo=>1, :bar=>10})
+        }.should raise_error(RuntimeError, /unknown option:.*bar/)
+      end
+
+      it "should fill in a default" do
+        Util.check_opts({:foo=>10}, {}).should == {:foo=>10}
+      end
+
+      it "should raise an error if a bang-suffixed option is not given" do
+        lambda {
+          Util.check_opts({:foo! =>nil}, {})
+        }.should raise_error(RuntimeError, /required options not given:.*foo/)
+      end
+
+      it "should check_opts on sub-hashes if constraints sub-hashes given" do
+        Util.check_opts({:foo=>{:bar=>10}}, {:foo=>{}}).should == {:foo=>{:bar=>10}}
+      end
+    end
   end
 end
