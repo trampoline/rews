@@ -226,7 +226,9 @@ module Rews
       end
 
       def ==(other)
-        @id == other.id &&
+        other.is_a?(VanillaFolderId) &&
+          @client == other.client &&
+          @id == other.id &&
           @change_key == other.change_key
       end
 
@@ -252,6 +254,13 @@ module Rews
         @id = id
         @mailbox_email = mailbox_email
         raise "no id" if !@id
+      end
+
+      def ==(other)
+        other.is_a?(DistinguishedFolderId) &&
+          @client = other.client &&
+          @id = other.id &&
+          @mailbox_email = other.mailbox_email
       end
 
       def to_xml
