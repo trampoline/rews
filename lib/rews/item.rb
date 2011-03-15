@@ -42,7 +42,7 @@ module Rews
       end
 
       def inspect
-        "#<#{self.class} @client=#{@client.inspect}, @item_class=#{@item_class}, @item_id=#{@folder_id.inspect}, @attributes=#{@attributes.inspect}>"
+        "#<#{self.class} @item_class=#{@item_class}, @item_id=#{@folder_id.inspect}, @attributes=#{@attributes.inspect}>"
       end
     end
 
@@ -81,7 +81,7 @@ module Rews
             
             xml << Shape::ItemShape.new(opts[:item_shape]||{}).to_xml
             xml.wsdl :ItemIds do
-              xml << Gyoku.xml(self.to_xml_hash(opts[:ignore_change_keys]))
+              xml << self.to_xml(opts[:ignore_change_keys])
             end
             
             soap.body = xml.target!
@@ -113,7 +113,7 @@ module Rews
         true
       end
 
-      def to_xml_hash(ignore_change_key=false)
+      def to_xml(ignore_change_key=false)
         xml = Builder::XmlMarkup.new
         attrs = {:Id=>id.to_s}
         attrs[:ChangeKey] = change_key.to_s if change_key && !ignore_change_key

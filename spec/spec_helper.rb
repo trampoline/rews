@@ -6,6 +6,7 @@ require 'spec'
 require 'spec/autorun'
 require 'rr'
 require 'nokogiri'
+require 'request_proxy'
 
 Spec::Runner.configure do |config|
   config.mock_with RR::Adapters::Rspec

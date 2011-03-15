@@ -6,6 +6,7 @@ module Rews
       attr_reader :attributes
 
       def initialize(client, folder)
+        @client = client
         @folder_id = VanillaFolderId.new(client, folder[:folder_id])
         @attributes = folder
       end
@@ -19,7 +20,7 @@ module Rews
       end
 
       def inspect
-        "#<#{self.class} @client=#{@client.inspect}, @folder_id=#{@folder_id.inspect}, @attributes=#{@attributes.inspect}>"
+        "#<#{self.class} @folder_id=#{@folder_id.inspect}, @attributes=#{@attributes.inspect}>"
       end
     end
 
