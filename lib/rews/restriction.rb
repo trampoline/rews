@@ -81,7 +81,9 @@ module Rews
       }
       def write_logical(xml, expr)
         xml.t LOGICAL_OPS[expr[0]] do
-          write_xml(xml ,expr[1..-1])
+          expr[1..-1].each do |clause|
+            Xml::write_expr(xml, clause)
+          end
         end
       end
     end
