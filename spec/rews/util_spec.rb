@@ -26,6 +26,11 @@ module Rews
     end
 
     describe "with_error_check" do
+      it "should yield, convert the response to a hash and fetch_in the status" do
+      end
+
+      it "should raise if there are any errors" do
+      end
     end
 
     describe "single_error_check" do

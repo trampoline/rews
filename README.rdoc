@@ -35,6 +35,12 @@ to use :
 
 == Install
 
+  to use NTLM authentication, you need versions of httpclient and ntlm-http 
+  gems with fixes for NTLM authentication
+
+  * httpclient branch ntlm_domain : https://github.com/mccraigmccraig/httpclient/tree/ntlm_domain
+  * ntlm-http branch fix_unicode : https://github.com/trampoline/ntlm-http/tree/fix_unicode
+
   gem install rews
 
 == Note on Patches/Pull Requests
