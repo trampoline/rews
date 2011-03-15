@@ -12,7 +12,7 @@ module Rews
     end
 
     def inspect
-      "#{self.class}: #{@expr.inspect}"
+      "#<#{self.class} @expr=#{@expr.inspect}>"
     end
 
     def to_xml

@@ -27,6 +27,7 @@ module Rews
       attr_reader :attributes
       
       def initialize(client, item_class, attributes)
+        @client = client
         @item_id = ItemId.new(client, attributes[:item_id])
         @item_class = item_class
         @attributes = attributes
@@ -38,6 +39,10 @@ module Rews
 
       def keys
         @attributes.keys
+      end
+
+      def inspect
+        "#<#{self.class} @client=#{@client.inspect}, @item_class=#{@item_class}, @item_id=#{@folder_id.inspect}, @attributes=#{@attributes.inspect}>"
       end
     end
 
@@ -53,6 +58,12 @@ module Rews
         @id = item_id[:id]
         @change_key=item_id[:change_key]
         raise "no id" if !@id
+      end
+
+      def ==(other)
+        @client == other.client &&
+          @id == other.id &&
+          @change_key == other.change_key
       end
 
       GET_ITEM_OPTS = {
@@ -93,7 +104,7 @@ module Rews
             xml = Builder::XmlMarkup.new
             
             xml.wsdl :ItemIds do
-              xml << Gyoku.xml(self.to_xml_hash(opts[:ignore_change_keys]))
+              xml << self.to_xml(opts[:ignore_change_keys])
             end
             
             soap.body = xml.target!
@@ -103,24 +114,15 @@ module Rews
       end
 
       def to_xml_hash(ignore_change_key=false)
-        if change_key && !ignore_change_key
-          {
-            "t:ItemId"=>"",
-            :attributes! => {
-              "t:ItemId" => {
-                "Id" => id.to_s,
-                "ChangeKey" => change_key.to_s}}}
-        else
-          {
-            "t:ItemId"=>"",
-            :attributes! => {
-              "t:ItemId" => {
-                "Id" => id.to_s}}}
-        end
+        xml = Builder::XmlMarkup.new
+        attrs = {:Id=>id.to_s}
+        attrs[:ChangeKey] = change_key.to_s if change_key && !ignore_change_key
+        xml.t :ItemId, attrs
+        xml.target!
       end
 
       def inspect
-        "#{self.class}(id: #{id}, change_key: #{change_key})"
+        "#<#{self.class} @id=#{id}, @change_key=#{change_key}>"
       end
     end
   end

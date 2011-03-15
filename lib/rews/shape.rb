@@ -27,6 +27,10 @@ module Rews
     class Base
       include Util
       attr_reader :shape
+
+      def inspect
+        "#<#{self.class} @shape=#{@shape}>"
+      end
     end
 
     ITEM_SHAPE_OPTS = {

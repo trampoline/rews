@@ -18,7 +18,7 @@ module Rews
       attr_reader :view
 
       def inspect
-        "#<#{self.class}: #{@view.inspect}>"
+        "#<#{self.class} @view=#{@view.inspect}>"
       end
     end
 

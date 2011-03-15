@@ -6,6 +6,10 @@ module Rews
     # Rews::Client.new('https://exchange.foo.com/EWS/Exchange.asmx', :ntlm, 'DOMAIN\\user', 'password')
     # Rews::Client.new('https://exchange.foo.com/EWS/Exchange.asmx', :basic, 'DOMAIN\\user', 'password')
     def initialize(endpoint, auth_type, user, password)
+      @endpoint=endpoint
+      @auth_type = auth_type
+      @user=user
+      @password=password
       @client = Savon::Client.new do
         wsdl.endpoint = endpoint
         wsdl.namespace = SCHEMA_MESSAGES
@@ -13,6 +17,10 @@ module Rews
         http.auth.ssl.verify_mode = :none
         http.auth.send(auth_type, user, password)
       end
+    end
+
+    def inspect
+      "#<#{self.class} @endpoint=#{@endpoint}, @auth_type=#{@auth_type}, @user=#{@user}, @password=#{@password}>"
     end
 
     # client.distinguished_folder_id('inbox')

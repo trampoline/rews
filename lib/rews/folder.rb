@@ -17,6 +17,10 @@ module Rews
       def keys
         @attributes.keys
       end
+
+      def inspect
+        "#<#{self.class} @client=#{@client.inspect}, @folder_id=#{@folder_id.inspect}, @attributes=#{@attributes.inspect}>"
+      end
     end
 
     class FindResult
@@ -47,6 +51,11 @@ module Rews
       def [](key)
         result[key]
       end
+
+      def inspect
+        attrs = VIEW_ATTRS.map{|attr| "@#{attr}=#{self.send(attr)}"}.join(", ")
+        "#<#{self.class} #{attrs}, @result=#{@result.inspect}>"
+      end
     end
 
     class BaseFolderId
@@ -76,7 +85,7 @@ module Rews
             xml << Restriction.new(opts[:restriction]).to_xml if opts[:restriction]
             
             xml.wsdl :ParentFolderIds do
-              xml << Gyoku.xml(self.to_xml_hash)
+              xml << self.to_xml
             end
             soap.body = xml.target!
           end
@@ -124,7 +133,7 @@ module Rews
             xml << SortOrder.new(opts[:sort_order]).to_xml if opts[:sort_order]
 
             xml.wsdl :ParentFolderIds do
-              xml << Gyoku.xml(self.to_xml_hash)
+              xml << self.to_xml
             end
 
             soap.body = xml.target!
@@ -166,7 +175,7 @@ module Rews
             xml << Shape::ItemShape.new(opts[:item_shape]||{}).to_xml
             xml.wsdl :ItemIds do
               message_ids.each do |mid|
-                xml << Gyoku.xml(mid.to_xml_hash(opts[:ignore_change_keys]))
+                xml << mid.to_xml(opts[:ignore_change_keys])
               end
             end
 
@@ -193,7 +202,7 @@ module Rews
 
             xml.wsdl :ItemIds do
               message_ids.each do |mid|
-                xml << Gyoku.xml(mid.to_xml_hash(opts[:ignore_change_keys]))
+                xml << mid.to_xml(opts[:ignore_change_keys])
               end
             end
 
@@ -215,25 +224,16 @@ module Rews
         raise "no id" if !@id
       end
 
-      def to_xml_hash
-        if change_key
-          {
-            "t:FolderId"=>"",
-            :attributes! => {
-              "t:FolderId" => {
-                "Id" => id.to_s,
-                "ChangeKey" => change_key.to_s}}}
-        else
-          {
-            "t:FolderId"=>"",
-            :attributes! => {
-              "t:FolderId" => {
-                "Id" => id.to_s}}}
-        end
+      def to_xml
+        xml = Builder::XmlMarkup.new
+        attrs = {:Id=>id.to_s}
+        attrs[:ChangeKey] = change_key.to_s if change_key
+        xml.t :FolderId, attrs
+        xml.target!
       end
 
       def inspect
-        "#{self.class}(id: #{id}, change_key: #{change_key})"
+        "#<#{self.class} @id=#{id}, @change_key=#{change_key}>"
       end
     end
 
@@ -248,26 +248,20 @@ module Rews
         raise "no id" if !@id
       end
 
-      def to_xml_hash
-        {
-          "t:DistinguishedFolderId"=>mailbox_xml_hash,
-          :attributes! => {"t:DistinguishedFolderId"=>{"Id"=>id}}}
+      def to_xml
+        xml = Builder::XmlMarkup.new
+        xml.t :DistinguishedFolderId, :Id=>id do
+          if mailbox_email
+            xml.t :Mailbox do
+              xml.t :EmailAddress, mailbox_email
+            end
+          end
+        end
+        xml.target!
       end
 
       def inspect
-        "#{self.class}(id: #{id}, mailbox_email: #{mailbox_email})"
-      end
-
-      private
-
-      def mailbox_xml_hash
-        if mailbox_email
-          {
-            "t:Mailbox"=>{
-              "t:EmailAddress"=>mailbox_email}}
-        else
-          ""
-        end
+        "#<#{self.class} @id=#{id}, @mailbox_email=#{mailbox_email}>"
       end
     end
   end
