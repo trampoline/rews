@@ -16,6 +16,10 @@ module Rews
       include Util
       
       attr_reader :view
+
+      def inspect
+        "#<#{self.class}: #{@view.inspect}>"
+      end
     end
 
     INDEXED_PAGE_VIEW_OPTS = {:max_entries_returned=>nil, :offset=>0, :base_point=>:Beginning}

@@ -5,6 +5,7 @@ require 'rews'
 require 'spec'
 require 'spec/autorun'
 require 'rr'
+require 'nokogiri'
 
 Spec::Runner.configure do |config|
   config.mock_with RR::Adapters::Rspec
