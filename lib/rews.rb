@@ -1,7 +1,7 @@
 $: << File.expand_path("..", __FILE__)
 
 require 'net/ntlm'
-require 'httpclient'
+# require 'httpclient' # don't need httpclient now ntlm-http is fixed too
 require 'savon'
 require 'fetch_in'
 
