@@ -1,7 +1,7 @@
 module Rews
   module Folder
 
-    # represents a +Folder+ in a mailbox on an Exchange server
+    # represents a Folder in a mailbox on an Exchange server
     class Folder
       attr_reader :client
       attr_reader :folder_id
@@ -76,7 +76,7 @@ module Rews
       end
     end
 
-    # Identifies a +Folder+
+    # Identifies a Folder
     class BaseFolderId
       include Util
       
@@ -183,7 +183,9 @@ module Rews
         :ignore_change_keys=>nil
       }
 
-      # retrieve a bunch of <tt>Item::Item</tt>s in one API hit
+      # retrieve a bunch of <tt>Item::Item</tt>s in one API hit.
+      # takes a list of <tt>Item::ItemId</tt>s, or a list of <tt>Item::Item</tt>, 
+      # or a <tt>Folder::FindResult</tt> and options to specify +Shape::ItemShape+
       def get_item(message_ids, opts={})
         opts = check_opts(GET_ITEM_OPTS, opts)
         message_ids = message_ids.result if message_ids.is_a?(FindResult)
@@ -213,7 +215,9 @@ module Rews
         :ignore_change_keys=>false
       }
 
-      # delete a bunch of Items in one API hit
+      # delete a bunch of Items in one API hit.
+      # takes a list of <tt>Item::ItemId</tt>s, or a list of <tt>Item::Item</tt>, 
+      # or a <tt>Folder::FindResult</tt> and options to specify DeleteType
       def delete_item(message_ids, opts={})
         opts = check_opts(DELETE_ITEM_OPTS, opts)
         message_ids = message_ids.result if message_ids.is_a?(FindResult)
@@ -240,10 +244,10 @@ module Rews
 
     # identifies a regular (non-distinguished) Folder on an Exchange server
     class VanillaFolderId < BaseFolderId
-      # the +Id+ of the +Folder+
+      # the Id of the Folder
       attr_reader :id
 
-      # +change_key+ identifies a specific version of the +Folder+
+      # +change_key+ identifies a specific version of the Folder
       attr_reader :change_key
 
       def initialize(client, folder_id)
@@ -273,13 +277,13 @@ module Rews
       end
     end
 
-    # identifies a +DistinguishedFolder+ in a mailbox on an Exchange server.
+    # identifies a DistinguishedFolder in a mailbox on an Exchange server.
     # the <tt>Client.distinguished_folder_id</tt> method returns <tt>DistinguishedFolderId</tt>s
     class DistinguishedFolderId < BaseFolderId
-      # the +Id+ of the +DistinguishedFolder+ e.g. <tt>"inbox"</tt>
+      # the Id of the DistinguishedFolder e.g. <tt>"inbox"</tt>
       attr_reader :id
 
-      # the email address of the mailbox containing the +DistinguishedFolder+
+      # the email address of the mailbox containing the DistinguishedFolder
       attr_reader :mailbox_email
 
       def initialize(client, id, mailbox_email=nil)

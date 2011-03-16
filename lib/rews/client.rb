@@ -26,7 +26,7 @@ module Rews
       "#<#{self.class} @endpoint=#{@endpoint}, @auth_type=#{@auth_type}, @user=#{@user}, @password=#{@password}>"
     end
 
-    # get a <tt>Folder::DistinguishedFolderId</tt> referencing one of the named top-level folders in an Exchange mailbox
+    # get a <tt>Folder::DistinguishedFolderId</tt> referencing one of the named top-level Folders in an Exchange mailbox
     # * get a folder from the default mailbox
     #  client.distinguished_folder_id('inbox')
     # * get a folder from another mailbox

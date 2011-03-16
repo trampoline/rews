@@ -1,5 +1,5 @@
 module Rews
-  # models +IndexedPageItemView+ and +IndexedPageFolderView+ definitions used by
+  # models IndexedPageItemView and IndexedPageFolderView definitions used by
   # <tt>Folder::BaseFolderId.find_*</tt> methods
   module View
     module Xml
@@ -26,7 +26,7 @@ module Rews
 
     INDEXED_PAGE_VIEW_OPTS = {:max_entries_returned=>nil, :offset=>0, :base_point=>:Beginning}
 
-    # models the +IndexedPageItemView+ used in <tt>Folder::BaseFolderId.find_item</tt> method
+    # models the IndexedPageItemView used in <tt>Folder::BaseFolderId.find_item</tt> method
     class IndexedPageItemView < Base
       def initialize(view)
         @view = check_opts(INDEXED_PAGE_VIEW_OPTS, view)
@@ -37,7 +37,7 @@ module Rews
       end
     end
 
-    # models the +IndexedPageFolderView+ used in <tt>Folder::BaseFolderId.find_folder</tt> methods
+    # models the IndexedPageFolderView used in <tt>Folder::BaseFolderId.find_folder</tt> methods
     class IndexedPageFolderView < Base
       def initialize(view)
         @view = check_opts(INDEXED_PAGE_VIEW_OPTS, view)

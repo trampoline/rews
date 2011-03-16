@@ -20,7 +20,7 @@ module Rews
       end.flatten
     end
 
-    # represents an +Item+ from a mailbox on an Exchange server
+    # represents an Item from a mailbox on an Exchange server
     class Item
       attr_reader :client
       attr_reader :item_id
@@ -42,12 +42,12 @@ module Rews
           @attributes == other.attributes
       end
 
-      # access the +Item+ attributes
+      # access the Item attributes
       def [](key)
         @attributes[key]
       end
       
-      # names of the +Item+ attributes
+      # names of the Item attributes
       def keys
         @attributes.keys
       end
@@ -57,16 +57,16 @@ module Rews
       end
     end
 
-    # identifies an +Item+
+    # identifies an Item
     class ItemId
       include Util
 
       attr_reader :client
 
-      # the +Id+ of the +Item+
+      # the +Id+ of the Item
       attr_reader :id
 
-      # the version of the +Item+
+      # the version of the Item
       attr_reader :change_key
       
       def initialize(client, item_id)
@@ -112,7 +112,7 @@ module Rews
         :ignore_change_keys=>false
       }
 
-      # delete the +Item+ from the server
+      # delete the Item from the server
       def delete_item(opts={})
         opts = check_opts(DELETE_ITEM_OPTS, opts)
         r = with_error_check(client, :delete_item_response, :response_messages, :delete_item_response_message) do

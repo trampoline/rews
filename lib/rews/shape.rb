@@ -1,7 +1,4 @@
 module Rews
-
-  # models +ItemShape+ and +FolderShape+ used in <tt>Folder::BaseFolderId.find_*</tt> and 
-  # <tt>Folder::BaseFolderId.get_*</tt> methods
   module Shape
 
     module Xml
@@ -27,6 +24,8 @@ module Rews
       end
     end
 
+    # models ItemShape and FolderShape used in <tt>Folder::BaseFolderId.find_*</tt> and 
+    # <tt>Folder::BaseFolderId.get_*</tt> methods
     class Base
       include Util
       attr_reader :shape
@@ -42,7 +41,7 @@ module Rews
       :additional_properties=>nil
     }
 
-    # models +ItemShape+ used in <tt>Folder::BaseFolderId.find_item</tt> and
+    # models ItemShape used in <tt>Folder::BaseFolderId.find_item</tt> and
     # <tt>Folder::BaseFolderId.get_item</tt> methods
     class ItemShape < Base
       def initialize(shape)
