@@ -183,6 +183,7 @@ module Rews
             xml << Shape::ItemShape.new(opts[:item_shape]||{}).to_xml
             xml.wsdl :ItemIds do
               message_ids.each do |mid|
+                mid = mid.item_id if mid.is_a?(Item::Item)
                 xml << mid.to_xml(opts[:ignore_change_keys])
               end
             end
@@ -210,6 +211,7 @@ module Rews
 
             xml.wsdl :ItemIds do
               message_ids.each do |mid|
+                mid = mid.item_id if mid.is_a?(Item::Item)
                 xml << mid.to_xml(opts[:ignore_change_keys])
               end
             end

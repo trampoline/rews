@@ -272,8 +272,13 @@ module Rews
           
           fid = Folder::DistinguishedFolderId.new(client, 'blah')
 
+          message_ids = message_ids.result if message_ids.is_a?(Folder::FindResult)
           message_ids.each do |mid|
-            mock(mid).to_xml(ignore_change_keys){""}
+            if mid.is_a?(Item::Item)
+              mock(mid.item_id).to_xml(ignore_change_keys){""}
+            else
+              mock(mid).to_xml(ignore_change_keys){""}
+            end
           end
           
           response = Object.new
@@ -320,11 +325,18 @@ module Rews
                                 true,
                                 [Item::Item.new(client, :message, {:item_id=>{:id=>"abc", :change_key=>"def"}}),
                                  Item::Item.new(client, :message, {:item_id=>{:id=>"ghi", :change_key=>"jkl"}})],
-                                {:message=>[{:item_id=>{:id=>"abc", :change_key=>"def"}},
-                                            {:item_id=>{:id=>"ghi", :change_key=>"jkl"}}]})
-          items.size.should == 2
-          items.first.item_id.should == Item::ItemId.new(client, :id=>"abc", :change_key=>"def")
-          items[1].item_id.should == Item::ItemId.new(client, :id=>"ghi", :change_key=>"jkl")
+                                {:message=>{:item_id=>{:id=>"abc", :change_key=>"def"}}})
+        end
+
+        it "should extract results from a FindResult if a FindResult is provided for identifiers" do
+          client = Object.new
+          items = test_get_item(client,
+                                {:base_shape=>:Default},
+                                true,
+                                Folder::FindResult.new({}) {
+                                  [Item::Item.new(client, :message, {:item_id=>{:id=>"abc", :change_key=>"def"}}),
+                                   Item::Item.new(client, :message, {:item_id=>{:id=>"ghi", :change_key=>"jkl"}})]},
+                                {:message=>{:item_id=>{:id=>"abc", :change_key=>"def"}}})
         end
       end
 
@@ -333,8 +345,13 @@ module Rews
           
           fid = Folder::DistinguishedFolderId.new(client, 'blah')
 
+          message_ids = message_ids.result if message_ids.is_a?(Folder::FindResult)
           message_ids.each do |mid|
-            mock(mid).to_xml(ignore_change_keys){""}
+            if mid.is_a?(Item::Item)
+              mock(mid.item_id).to_xml(ignore_change_keys){""}
+            else
+              mock(mid).to_xml(ignore_change_keys){""}
+            end
           end
           
           response = Object.new
@@ -370,7 +387,15 @@ module Rews
                            [Item::Item.new(client, :message, {:item_id=>{:id=>"abc", :change_key=>"def"}}),
                             Item::Item.new(client, :message, {:item_id=>{:id=>"ghi", :change_key=>"jkl"}})])
         end
-        
+
+        it "should extract ItemIds from a FindResult if a FindResult is provided as identifiers" do
+          client = Object.new
+          test_delete_item(client, 
+                           :HardDelete, 
+                           true, 
+                           Folder::FindResult.new({}) {[Item::Item.new(client, :message, {:item_id=>{:id=>"abc", :change_key=>"def"}}),
+                                                        Item::Item.new(client, :message, {:item_id=>{:id=>"ghi", :change_key=>"jkl"}})]})
+        end
       end
     end
   end
