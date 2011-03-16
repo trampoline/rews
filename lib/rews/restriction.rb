@@ -1,8 +1,11 @@
-# takes restrictions written in Ruby s-expressions and 
-# outputs Exchange Web Services Restriction XML
-#
-#
 module Rews
+  # models <tt>Restriction</tt>s for <tt>find_*</tt> operations
+  # on <tt>Folder::BaseFolderId</tt>
+  #
+  # takes restrictions written in Ruby s-expressions and 
+  # outputs Exchange Web Services Restriction XML. e.g.
+  #
+  # <tt>[[:and, [:==, "item:Subject", "hello"], [:>=, "item:DateTimeSent", DateTime.parse("2011-03-16T15:57:37+00:00")]]</tt>
   class Restriction
 
     attr_reader :expr

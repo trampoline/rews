@@ -1,4 +1,7 @@
 module Rews
+
+  # models +ItemShape+ and +FolderShape+ used in <tt>Folder::BaseFolderId.find_*</tt> and 
+  # <tt>Folder::BaseFolderId.get_*</tt> methods
   module Shape
 
     module Xml
@@ -39,6 +42,8 @@ module Rews
       :additional_properties=>nil
     }
 
+    # models +ItemShape+ used in <tt>Folder::BaseFolderId.find_item</tt> and
+    # <tt>Folder::BaseFolderId.get_item</tt> methods
     class ItemShape < Base
       def initialize(shape)
         @shape = check_opts(ITEM_SHAPE_OPTS, shape)
@@ -58,6 +63,7 @@ module Rews
       :additional_properties=>nil
     }
 
+    # models +FolderShape+ used in <tt>Folder::BaseFolderId.find_folder</tt> method
     class FolderShape < Base
       def initialize(shape)
         @shape = check_opts(FOLDER_SHAPE_OPTS, shape)

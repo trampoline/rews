@@ -6,10 +6,10 @@ module Rews
 
     # validates an options hash against a constraints hash
     # in the constraints hash :
-    # - keys ending in ! indicate option is required
-    # - keys not ending in ! indicate option is not required
-    # - non-nil values provide defaults
-    # - hash values provide constraints for sub-hashes
+    # * keys ending in ! indicate option is required
+    # * keys not ending in ! indicate option is not required
+    # * non-nil values provide defaults
+    # * hash values provide constraints for sub-hashes
     def check_opts(constraints, opts={}, prefix=nil)
       required_keys = Hash[constraints.keys.select{|k| k.to_s[-1..-1] == '!'}.map{|k| [strip_bang(k),k]}]
       optional_keys = constraints.keys.select{|k| k.to_s[-1..-1] != '!'}
@@ -34,6 +34,7 @@ module Rews
       opts
     end
 
+    # strip a ! from the end of a +String+ or +Symbol+
     def strip_bang(k)
       if k.is_a? Symbol
         k.to_s[0...-1].to_sym
@@ -42,14 +43,19 @@ module Rews
       end
     end
 
+    # camel-case a +String+
     def camelize(s)
       s.split('_').map(&:capitalize).join
     end
 
+    # camel-case the keys of a +Hash+
     def camel_keys(h)
       Hash[h.map{|k,v| [camelize(k.to_s), v]}]
     end
 
+    # check the response codes of an Exchange Web Services request.
+    # the supplied block makes a SOAP request, and the response is parsed
+    # out and checked
     def with_error_check(client, *response_msg_keys)
       raise "no block" if !block_given?
 
@@ -69,6 +75,7 @@ module Rews
       statuses
     end
 
+    # check the status of the response of a single part of a multi-part request
     def single_error_check(client, status)
       begin
         response_class = status[:response_class]

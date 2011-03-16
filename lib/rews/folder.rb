@@ -1,5 +1,7 @@
 module Rews
   module Folder
+
+    # represents a +Folder+ in a mailbox on an Exchange server
     class Folder
       attr_reader :client
       attr_reader :folder_id
@@ -18,10 +20,12 @@ module Rews
           @attributes == other.attributes
       end
 
+      # access the +Folder+ +attributes+
       def [](key)
         @attributes[key]
       end
 
+      # keys of the +Folder+ +attributes+
       def keys
         @attributes.keys
       end
@@ -31,6 +35,7 @@ module Rews
       end
     end
 
+    # <tt>find_*</tt> methods on <tt>Folder::BaseFolderId</tt> return a +FindResult+
     class FindResult
       VIEW_ATTRS = [:includes_last_item_in_range,
                     :indexed_paging_offset,
@@ -39,6 +44,8 @@ module Rews
       VIEW_ATTRS.each do |attr|
         attr_reader attr
       end
+
+      # the +result+ of the +find_*+ call
       attr_reader :result
 
       def initialize(view, &proc)
@@ -48,14 +55,17 @@ module Rews
         @result = proc.call(view) if proc
       end
 
+      # count of items in the +result+
       def length
         result.length
       end
 
+      # alias for +length+
       def size
         result.size
       end
 
+      # access an element from +result+
       def [](key)
         result[key]
       end
@@ -66,6 +76,7 @@ module Rews
       end
     end
 
+    # Identifies a +Folder+
     class BaseFolderId
       include Util
       
@@ -80,6 +91,7 @@ module Rews
         :indexed_page_folder_view=>View::INDEXED_PAGE_VIEW_OPTS,
         :folder_shape=>Shape::FOLDER_SHAPE_OPTS}
 
+      # find <tt>Folder::Folder</tt>s within a <tt>Folder::Folder</tt>
       def find_folder(opts={})
         opts = check_opts(FIND_FOLDER_OPTS, opts)
 
@@ -108,6 +120,7 @@ module Rews
         end
       end
 
+      # find <tt>Folder::FolderIds</tt>s within a <tt>Folder::FolderIds</tt>
       def find_folder_id(opts={})
         opts = check_opts(FIND_FOLDER_OPTS, opts)
 
@@ -125,7 +138,7 @@ module Rews
         :indexed_page_item_view=>View::INDEXED_PAGE_VIEW_OPTS,
         :item_shape=>Shape::ITEM_SHAPE_OPTS}
 
-      # find message-ids in a folder
+      # find <tt>Item::Item</tt>s in a folder
       def find_item(opts={})
         opts = check_opts(FIND_ITEM_OPTS, opts)
 
@@ -153,6 +166,7 @@ module Rews
         end
       end
 
+      # find <tt>Item::ItemIds</tt>s in a folder
       def find_item_id(opts={})
         opts = check_opts(FIND_ITEM_OPTS, opts)
 
@@ -169,7 +183,7 @@ module Rews
         :ignore_change_keys=>nil
       }
 
-      # get a bunch of messages in one api hit
+      # retrieve a bunch of <tt>Item::Item</tt>s in one API hit
       def get_item(message_ids, opts={})
         opts = check_opts(GET_ITEM_OPTS, opts)
         message_ids = message_ids.result if message_ids.is_a?(FindResult)
@@ -199,6 +213,7 @@ module Rews
         :ignore_change_keys=>false
       }
 
+      # delete a bunch of Items in one API hit
       def delete_item(message_ids, opts={})
         opts = check_opts(DELETE_ITEM_OPTS, opts)
         message_ids = message_ids.result if message_ids.is_a?(FindResult)
@@ -223,8 +238,12 @@ module Rews
       end
     end
 
+    # identifies a regular (non-distinguished) Folder on an Exchange server
     class VanillaFolderId < BaseFolderId
+      # the +Id+ of the +Folder+
       attr_reader :id
+
+      # +change_key+ identifies a specific version of the +Folder+
       attr_reader :change_key
 
       def initialize(client, folder_id)
@@ -254,8 +273,13 @@ module Rews
       end
     end
 
+    # identifies a +DistinguishedFolder+ in a mailbox on an Exchange server.
+    # the <tt>Client.distinguished_folder_id</tt> method returns <tt>DistinguishedFolderId</tt>s
     class DistinguishedFolderId < BaseFolderId
+      # the +Id+ of the +DistinguishedFolder+ e.g. <tt>"inbox"</tt>
       attr_reader :id
+
+      # the email address of the mailbox containing the +DistinguishedFolder+
       attr_reader :mailbox_email
 
       def initialize(client, id, mailbox_email=nil)

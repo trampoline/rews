@@ -1,6 +1,10 @@
-# takes sort_orders written in Ruby s-expressions and
-# outputs EWS SortOrder XML
 module Rews
+  # models +SortOrder+ used in <tt>Folder::BaseFolderId.find_*</tt> methods
+  #
+  # takes sort_orders written in Ruby s-expressions and
+  # outputs EWS SortOrder XML e.g.
+  #
+  # <tt>>[["item:DateTimeReceived", "Ascending"], ["item:Size", "Descending"]]</tt>
   class SortOrder
     attr_reader :expr
 
