@@ -33,6 +33,14 @@ module Rews
         @attributes = attributes
       end
 
+      def ==(other)
+        other.is_a?(Item) &&
+          @client == other.client &&
+          @item_id == other.item_id &&
+          @item_class == other.item_class &&
+          @attributes == other.attributes
+      end
+
       def [](key)
         @attributes[key]
       end

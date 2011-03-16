@@ -44,7 +44,6 @@ module Rews
         # deal with different call arity
         mock(client).request(*[:wsdl, action, attrs].compact) do |*args|
           block = args.last # block is the last arg
-          ns, msg, attrs = args # attrs may not have been passed
 
           ctx = RequestProxy.new()
           ns = Object.new

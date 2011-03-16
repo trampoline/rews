@@ -85,6 +85,10 @@ module Rews
         Util.check_opts({:foo=>10}, {}).should == {:foo=>10}
       end
 
+      it "should not fill in a key if nil value given" do
+        Util.check_opts({:foo=>nil}, {}).should == {}
+      end
+
       it "should raise an error if a bang-suffixed option is not given" do
         lambda {
           Util.check_opts({:foo! =>nil}, {})

@@ -11,6 +11,13 @@ module Rews
         @attributes = folder
       end
 
+      def ==(other)
+        other.is_a?(Folder) &&
+          @client == other.client &&
+          @folder_id == other.folder_id &&
+          @attributes == other.attributes
+      end
+
       def [](key)
         @attributes[key]
       end

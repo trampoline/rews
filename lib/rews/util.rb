@@ -30,7 +30,7 @@ module Rews
       raise "required options not given: #{required_keys.keys.map{|k| [prefix,k].compact.join('.')}.join(", ")}" if required_keys.size>0
       
       # defaults
-      optional_keys.each{|k| opts[k] = constraints[k] if !constraints[k].is_a?(Hash)}
+      optional_keys.each{|k| opts[k] = constraints[k] if constraints[k] && !constraints[k].is_a?(Hash)}
       opts
     end
 

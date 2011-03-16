@@ -67,6 +67,208 @@ module Rews
     end
 
     describe Folder::BaseFolderId do
+      def mock_request(client, action, attrs, response)
+        # deal with different call arity
+        mock(client).request(*[:wsdl, action, attrs].compact) do |*args|
+          block = args.last # block is the last arg
+
+          ctx = RequestProxy.new()
+          ns = Object.new
+          mock(ctx.soap).namespaces{ns}
+          mock(ns)["xmlns:t"]=Rews::SCHEMA_TYPES
+          mock(ctx.soap).body=(anything)
+          
+          ctx.eval_with_delegation(&block)
+          response
+        end
+      end
+
+      describe "find_folder" do
+        def test_find_folder(client, folder_shape, indexed_page_folder_view, restriction, result)
+          shape = Object.new
+          mock(Shape::FolderShape).new(folder_shape||{}){shape}
+          mock(shape).to_xml{""}
+
+          if indexed_page_folder_view
+            view = Object.new
+            mock(View::IndexedPageFolderView).new(indexed_page_folder_view){view}
+            mock(view).to_xml{""}
+          end
+
+          if restriction
+            r = Object.new
+            mock(Restriction).new(restriction){r}
+            mock(r).to_xml{""}
+          end
+
+          fid = Folder::DistinguishedFolderId.new(client, 'blah')
+          mock.proxy(fid).to_xml
+
+          response = Object.new
+          mock(response).to_hash{{:find_folder_response=>{:response_messages=>{:find_folder_response_message=>{:response_class=>"Success", :root_folder=>result}}}}}
+
+          mock_request(client, "FindFolder", {"Traversal"=>"Shallow"}, response)
+
+          opts = {}
+          opts[:folder_shape] = folder_shape if folder_shape
+          opts[:indexed_page_folder_view] = indexed_page_folder_view if indexed_page_folder_view
+          opts[:restriction] = restriction if restriction
+          fid.find_folder(opts)
+        end
+
+        it "should generate minimal xml and parse a response with one folder" do
+          client = Object.new
+          folders = test_find_folder(client,
+                                     {:base_shape=>:IdOnly},
+                                     nil,
+                                     nil,
+                                     {:includes_last_item_in_range=>false,
+                                       :indexed_paging_offset=>0,
+                                       :total_items_in_view=>1,
+                                       :folders=>{:folder=>{:folder_id=>{:id=>"abc", :change_key=>"def"}}}})
+          folders.includes_last_item_in_range.should == false
+          folders.indexed_paging_offset.should == 0
+          folders.total_items_in_view.should == 1
+          folders.result.first.should == Folder::Folder.new(client, :folder_id=>{:id=>"abc", :change_key=>"def"})
+          
+        end
+
+        it "should generate xml with indexed_page_folder_view and parse a response with multiple folders" do
+          client = Object.new
+          folders = test_find_folder(client,
+                                     {:base_shape=>:Default},
+                                     {:max_entries_returned=>10, :offset=>10, :base_point=>:Beginning},
+                                     [[:== , "item:DateTimeReceived", DateTime.now]],
+                                     {:includes_last_item_in_range=>true,
+                                       :indexed_paging_offset=>10,
+                                       :total_items_in_view=>5,
+                                       :folders=>{:folder=>[{:folder_id=>{:id=>"abc", :change_key=>"def"}},
+                                                            {:folder_id=>{:id=>"ghi", :change_key=>"jkl"}}]}})
+          folders.includes_last_item_in_range.should == true
+          folders.indexed_paging_offset.should == 10
+          folders.total_items_in_view.should == 5
+          folders.result.first.should == Folder::Folder.new(client, :folder_id=>{:id=>"abc", :change_key=>"def"})
+          folders.result[1].should == Folder::Folder.new(client, :folder_id=>{:id=>"ghi", :change_key=>"jkl"})
+        end
+      end
+
+      describe "find_folder_id" do
+        it "should call find_folder with a default BaseShape of IdOnly" do
+          client=Object.new
+
+          fid = Folder::DistinguishedFolderId.new(client, 'blah')
+          
+          opts = {:indexed_page_folder_view=>{:max_entries_returned=>10, :offset=>10, :base_point=>:Beginning},
+            :restriction=>[[:==, "item:DateTimeReceived", DateTime.now]]}
+          mock(fid).find_folder(opts){Folder::FindResult.new(:includes_last_item_in_range=>true, :indexed_paging_offset=>10, :total_items_in_view=>3){[Folder::Folder.new(client, {:folder_id=>{:id=>"abc", :change_key=>"def"}})]}}
+          
+          fres = fid.find_folder_id(opts)
+          fres.includes_last_item_in_range.should == true
+          fres.indexed_paging_offset.should == 10
+          fres.total_items_in_view.should == 3
+        end
+      end
+
+      def test_find_item(client, item_shape, indexed_page_item_view, restriction, result)
+        shape = Object.new
+        mock(Shape::ItemShape).new(item_shape||{}){shape}
+        mock(shape).to_xml{""}
+
+        if indexed_page_item_view
+          view = Object.new
+          mock(View::IndexedPageItemView).new(indexed_page_item_view){view}
+          mock(view).to_xml{""}
+        end
+
+        if restriction
+          r = Object.new
+          mock(Restriction).new(restriction){r}
+          mock(r).to_xml{""}
+        end
+
+        fid = Folder::DistinguishedFolderId.new(client, 'blah')
+        mock.proxy(fid).to_xml
+
+        response = Object.new
+        mock(response).to_hash{{:find_item_response=>{:response_messages=>{:find_item_response_message=>{:response_class=>"Success", :root_folder=>result}}}}}
+
+        mock_request(client, "FindItem", {"Traversal"=>"Shallow"}, response)
+
+        opts = {}
+        opts[:item_shape] = item_shape if item_shape
+        opts[:indexed_page_item_view] = indexed_page_item_view if indexed_page_item_view
+        opts[:restriction] = restriction if restriction
+        fid.find_item(opts)
+      end
+      
+      describe "find_item" do
+        it "should generate minimal xml and parse a response with one item" do
+          client = Object.new
+          items = test_find_item(client,
+                                 {:base_shape=>:IdOnly},
+                                 nil,
+                                 nil,
+                                 {:includes_last_item_in_range=>false,
+                                   :indexed_paging_offset=>0,
+                                   :total_items_in_view=>1,
+                                   :items=>{:message=>{:item_id=>{:id=>"abc", :change_key=>"def"}}}})
+          items.includes_last_item_in_range.should == false
+          items.indexed_paging_offset.should == 0
+          items.total_items_in_view.should == 1
+          items.result.size.should == 1
+          items.result.first.should == Item::Item.new(client, :message, :item_id=>{:id=>"abc", :change_key=>"def"})
+        end
+
+        it "should generate xml with indexed_page_folder_view and parse a response with multiple folders" do
+          client = Object.new
+          items = test_find_item(client,
+                                 {:base_shape=>:IdOnly},
+                                 {:max_entries_returned=>10, :offset=>10, :base_point=>:Beginning},
+                                 [[:== , "item:DateTimeReceived", DateTime.now]],
+                                 {:includes_last_item_in_range=>false,
+                                   :indexed_paging_offset=>0,
+                                   :total_items_in_view=>1,
+                                   :items=>{:message=>[{:item_id=>{:id=>"abc", :change_key=>"def"}},
+                                                       {:item_id=>{:id=>"ghi", :change_key=>"jkl"}}]}})
+          items.includes_last_item_in_range.should == false
+          items.indexed_paging_offset.should == 0
+          items.total_items_in_view.should == 1
+          items.result.size.should == 2
+          items.result.first.should == Item::Item.new(client, :message, :item_id=>{:id=>"abc", :change_key=>"def"})
+          items.result[1].should == Item::Item.new(client, :message, :item_id=>{:id=>"ghi", :change_key=>"jkl"})
+        end
+      end
+
+      describe "find_item_id" do
+        it "should call find_folder with a default BaseShape of IdOnly" do
+          client=Object.new
+
+          fid = Folder::DistinguishedFolderId.new(client, 'blah')
+          
+          opts = {
+            :indexed_page_item_view=>{:max_entries_returned=>10, :offset=>10, :base_point=>:Beginning}
+          }
+
+          mock(fid).find_item(opts.merge(:item_shape=>{:base_shape=>:IdOnly})) do
+            Folder::FindResult.new(:includes_last_item_in_range=>false, 
+                                   :indexed_paging_offset=>10, 
+                                   :total_items_in_view=>10) do
+              [Item::Item.new(client, :message, {:item_id=>{:id=>"abc", :change_key=>"def"}})]
+            end
+          end
+          
+          res = fid.find_item_id(opts)
+          res.includes_last_item_in_range.should == false
+          res.indexed_paging_offset.should == 10
+          res.total_items_in_view.should == 10
+        end
+      end
+
+      describe "get_item" do
+      end
+
+      describe "delete_item" do
+      end
     end
   end
 end
