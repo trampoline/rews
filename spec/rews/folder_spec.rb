@@ -265,9 +265,112 @@ module Rews
       end
 
       describe "get_item" do
+        def test_get_item(client, item_shape, ignore_change_keys, message_ids, result)
+          shape = Object.new
+          mock(Shape::ItemShape).new(item_shape||{}){shape}
+          mock(shape).to_xml{""}
+          
+          fid = Folder::DistinguishedFolderId.new(client, 'blah')
+
+          message_ids.each do |mid|
+            mock(mid).to_xml(ignore_change_keys){""}
+          end
+          
+          response = Object.new
+          mock(response).to_hash{{:get_item_response=>{:response_messages=>{:get_item_response_message=>{:response_class=>"Success", :items=>result}}}}}
+          
+          mock_request(client, "GetItem", nil, response)
+          
+          opts = {}
+          opts[:item_shape]=item_shape if item_shape
+          opts[:ignore_change_keys]=ignore_change_keys if ignore_change_keys
+          fid.get_item(message_ids, opts)
+        end
+
+        it "should generate xml including all provided ItemIds and parse response" do
+          client = Object.new
+          items = test_get_item(client,
+                                {:base_shape=>:IdOnly},
+                                nil,
+                                [Item::ItemId.new(client, {:id=>"abc", :change_key=>"def"})],
+                                {:message=>{:item_id=>{:id=>"abc", :change_key=>"def"}}})
+          items.size.should == 1
+          msg=items.first
+          msg.item_id.should == Item::ItemId.new(client, :id=>"abc", :change_key=>"def")
+        end
+
+        it "should generate xml ignoring change keys if requested and parsing a response with multiple items" do
+          client = Object.new
+          items = test_get_item(client,
+                                {:base_shape=>:Default},
+                                true,
+                                [Item::ItemId.new(client, {:id=>"abc", :change_key=>"def"}),
+                                 Item::ItemId.new(client, {:id=>"ghi", :change_key=>"jkl"})],
+                                {:message=>[{:item_id=>{:id=>"abc", :change_key=>"def"}},
+                                            {:item_id=>{:id=>"ghi", :change_key=>"jkl"}}]})
+          items.size.should == 2
+          items.first.item_id.should == Item::ItemId.new(client, :id=>"abc", :change_key=>"def")
+          items[1].item_id.should == Item::ItemId.new(client, :id=>"ghi", :change_key=>"jkl")
+        end
+
+        it "should extract ItemIds from Items if items are provided as identifiers" do
+          client = Object.new
+          items = test_get_item(client,
+                                {:base_shape=>:Default},
+                                true,
+                                [Item::Item.new(client, :message, {:item_id=>{:id=>"abc", :change_key=>"def"}}),
+                                 Item::Item.new(client, :message, {:item_id=>{:id=>"ghi", :change_key=>"jkl"}})],
+                                {:message=>[{:item_id=>{:id=>"abc", :change_key=>"def"}},
+                                            {:item_id=>{:id=>"ghi", :change_key=>"jkl"}}]})
+          items.size.should == 2
+          items.first.item_id.should == Item::ItemId.new(client, :id=>"abc", :change_key=>"def")
+          items[1].item_id.should == Item::ItemId.new(client, :id=>"ghi", :change_key=>"jkl")
+        end
       end
 
       describe "delete_item" do
+        def test_delete_item(client, delete_type, ignore_change_keys, message_ids)
+          
+          fid = Folder::DistinguishedFolderId.new(client, 'blah')
+
+          message_ids.each do |mid|
+            mock(mid).to_xml(ignore_change_keys){""}
+          end
+          
+          response = Object.new
+          mock(response).to_hash{{:delete_item_response=>{:response_messages=>{:delete_item_response_message=>{:response_class=>"Success"}}}}}
+          
+          mock_request(client, "DeleteItem", {:DeleteType=>delete_type}, response)
+          
+          opts = {}
+          opts[:delete_type]=delete_type if delete_type
+          opts[:ignore_change_keys]=ignore_change_keys if ignore_change_keys
+          fid.delete_item(message_ids, opts)
+        end
+
+        it "should generate xml including a single ItemId" do
+          client = Object.new
+          test_delete_item(client, :HardDelete, nil, [Item::ItemId.new(client, :id=>"abc", :change_key=>"def")])
+        end
+        
+        it "should generate xml ignoring change keys and including multiple ItemIds" do
+          client = Object.new
+          test_delete_item(client, 
+                           :HardDelete, 
+                           true, 
+                           [Item::ItemId.new(client, :id=>"abc", :change_key=>"def"),
+                           Item::ItemId.new(client, :id=>"ghi", :change_key=>"jkl")])
+        end
+
+        it "should extract ItemIds from Items if Items are provided as identifiers" do
+          client = Object.new
+          test_delete_item(client, 
+                           :HardDelete, 
+                           true, 
+                           [Item::Item.new(client, :message, {:item_id=>{:id=>"abc", :change_key=>"def"}}),
+                            Item::Item.new(client, :message, {:item_id=>{:id=>"ghi", :change_key=>"jkl"}})])
+        end
+        
       end
     end
   end
