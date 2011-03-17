@@ -14,6 +14,20 @@ module Rews
     end
 
     describe Folder::DistinguishedFolderId do
+      it "should create a JSON compatible key" do
+        client = Object.new
+        dfid = Folder::DistinguishedFolderId.new(client, 'inbox')
+        dfid.key.should == ["distinguished_folder", 'inbox']
+        dfid.key(true).should == ["distinguished_folder", 'inbox']
+      end
+
+      it "should create a JSON compatible key with a specified mailbox" do
+        client = Object.new
+        dfid = Folder::DistinguishedFolderId.new(client, 'inbox', "foo@bar.com")
+        dfid.key.should == ["distinguished_folder", 'inbox', "foo@bar.com"]
+        dfid.key(true).should == ["distinguished_folder", 'inbox', "foo@bar.com"]
+      end
+
       it "should generate DistinguishedFolderId xml for the default mailbox" do
         client = Object.new
         xml = Folder::DistinguishedFolderId.new(client, 'inbox').to_xml
@@ -45,6 +59,13 @@ module Rews
     end
 
     describe Folder::VanillaFolderId do
+      it "should create a JSON compatible key" do
+        client = Object.new
+        dfid = Folder::VanillaFolderId.new(client, {:id=>'abc', :change_key=>"def"})
+        dfid.key.should == ["folder", 'abc', 'def']
+        dfid.key(true).should == ["folder", 'abc']
+      end
+      
       it "should generate FolderId xml with a change_key" do
         client = Object.new
         xml = Folder::VanillaFolderId.new(client, {:id=>"abc", :change_key=>"def"}).to_xml

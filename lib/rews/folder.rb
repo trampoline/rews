@@ -264,6 +264,13 @@ module Rews
           @change_key == other.change_key
       end
 
+      # a JSON compatible key for persistently identifying this folder
+      def key(ignore_change_key=false)
+        key = ["folder", id]
+        key << change_key if !ignore_change_key
+        key
+      end
+
       def to_xml
         xml = Builder::XmlMarkup.new
         attrs = {:Id=>id.to_s}
@@ -298,6 +305,13 @@ module Rews
           @client = other.client &&
           @id = other.id &&
           @mailbox_email = other.mailbox_email
+      end
+
+      # a JSON compatible key for persistently identifying this folder
+      def key(ignore_change_key=false)
+        key = ["distinguished_folder", id]
+        key << mailbox_email if mailbox_email
+        key
       end
 
       def to_xml
