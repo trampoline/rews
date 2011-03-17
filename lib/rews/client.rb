@@ -1,5 +1,9 @@
 module Rews
   class Client
+    attr_reader :endpoint
+    attr_reader :auth_type
+    attr_reader :user
+    attr_reader :password
     attr_reader :savon_client
     attr_accessor :logdev
 
