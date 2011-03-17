@@ -1,6 +1,6 @@
 module Rews
   class Client
-    attr_reader :client
+    attr_reader :savon_client
     attr_accessor :logdev
 
     # create a +Client+ to access Exchange Web Services
@@ -13,7 +13,7 @@ module Rews
       @auth_type = auth_type
       @user=user
       @password=password
-      @client = Savon::Client.new do
+      @savon_client = Savon::Client.new do
         wsdl.endpoint = endpoint
         wsdl.namespace = SCHEMA_MESSAGES
         
@@ -32,7 +32,7 @@ module Rews
     # * get a folder from another mailbox
     #  client.distinguished_folder_id('inbox', 'foo@bar.com')
     def distinguished_folder_id(id, mailbox_email=nil)
-      Folder::DistinguishedFolderId.new(client, id, mailbox_email)
+      Folder::DistinguishedFolderId.new(self, id, mailbox_email)
     end
 
     # yield a +Logger+ if +logdev+ has been set

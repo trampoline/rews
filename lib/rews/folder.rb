@@ -96,7 +96,7 @@ module Rews
         opts = check_opts(FIND_FOLDER_OPTS, opts)
 
         r = with_error_check(client, :find_folder_response, :response_messages, :find_folder_response_message) do
-          client.request(:wsdl, "FindFolder", "Traversal"=>"Shallow") do
+          client.savon_client.request(:wsdl, "FindFolder", "Traversal"=>"Shallow") do
             soap.namespaces["xmlns:t"]=SCHEMA_TYPES
             xml = Builder::XmlMarkup.new
             
@@ -143,7 +143,7 @@ module Rews
         opts = check_opts(FIND_ITEM_OPTS, opts)
 
         r = with_error_check(client, :find_item_response, :response_messages, :find_item_response_message) do
-          client.request(:wsdl, "FindItem", "Traversal"=>"Shallow") do
+          client.savon_client.request(:wsdl, "FindItem", "Traversal"=>"Shallow") do
             soap.namespaces["xmlns:t"]=SCHEMA_TYPES
             
             xml = Builder::XmlMarkup.new
@@ -191,7 +191,7 @@ module Rews
         message_ids = message_ids.result if message_ids.is_a?(FindResult)
 
         r = with_error_check(client, :get_item_response,:response_messages,:get_item_response_message) do
-          client.request(:wsdl, "GetItem") do
+          client.savon_client.request(:wsdl, "GetItem") do
             soap.namespaces["xmlns:t"]=SCHEMA_TYPES
             
             xml = Builder::XmlMarkup.new
@@ -223,7 +223,7 @@ module Rews
         message_ids = message_ids.result if message_ids.is_a?(FindResult)
 
         r = with_error_check(client, :delete_item_response, :response_messages, :delete_item_response_message) do
-          client.request(:wsdl, "DeleteItem", :DeleteType=>opts[:delete_type]) do
+          client.savon_client.request(:wsdl, "DeleteItem", :DeleteType=>opts[:delete_type]) do
             soap.namespaces["xmlns:t"]=SCHEMA_TYPES
             
             xml = Builder::XmlMarkup.new

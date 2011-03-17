@@ -69,7 +69,7 @@ module Rews
     describe Folder::BaseFolderId do
       def mock_request(client, action, attrs, response)
         # deal with different call arity
-        mock(client).request(*[:wsdl, action, attrs].compact) do |*args|
+        mock(client).savon_client.mock!.request(*[:wsdl, action, attrs].compact) do |*args|
           block = args.last # block is the last arg
 
           ctx = RequestProxy.new()

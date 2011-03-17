@@ -91,7 +91,7 @@ module Rews
       def get_item(opts={})
         opts = check_opts(GET_ITEM_OPTS, opts)
         r = with_error_check(client, :get_item_response,:response_messages,:get_item_response_message) do
-          client.request(:wsdl, "GetItem") do
+          client.savon_client.request(:wsdl, "GetItem") do
             soap.namespaces["xmlns:t"]=SCHEMA_TYPES
             
             xml = Builder::XmlMarkup.new
@@ -116,7 +116,7 @@ module Rews
       def delete_item(opts={})
         opts = check_opts(DELETE_ITEM_OPTS, opts)
         r = with_error_check(client, :delete_item_response, :response_messages, :delete_item_response_message) do
-          client.request(:wsdl, "DeleteItem", :DeleteType=>opts[:delete_type]) do
+          client.savon_client.request(:wsdl, "DeleteItem", :DeleteType=>opts[:delete_type]) do
             soap.namespaces["xmlns:t"]=SCHEMA_TYPES
             
             xml = Builder::XmlMarkup.new
