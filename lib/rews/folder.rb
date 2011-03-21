@@ -302,9 +302,9 @@ module Rews
 
       def ==(other)
         other.is_a?(DistinguishedFolderId) &&
-          @client = other.client &&
-          @id = other.id &&
-          @mailbox_email = other.mailbox_email
+          @client == other.client &&
+          @id == other.id &&
+          @mailbox_email == other.mailbox_email
       end
 
       # a JSON compatible key for persistently identifying this folder
