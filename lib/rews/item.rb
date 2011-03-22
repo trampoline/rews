@@ -4,6 +4,7 @@ module Rews
 
     # return a list of Item objects given a hash formed from an Items element
     def read_items(client, items)
+      return [] if !items
       items.map do |item_class,items_of_class|
         items_of_class = [items_of_class] if !items_of_class.is_a?(Array)
         items_of_class.map do |item|

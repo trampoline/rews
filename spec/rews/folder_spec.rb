@@ -223,6 +223,21 @@ module Rews
       end
       
       describe "find_item" do
+        it "should parse a response with no items" do
+          client = Object.new
+          items = test_find_item(client,
+                                 {:base_shape=>:IdOnly},
+                                 nil,
+                                 nil,
+                                 {:includes_last_item_in_range=>false,
+                                   :indexed_paging_offset=>10,
+                                   :total_items_in_view=>0,
+                                   :items=>nil})
+          items.indexed_paging_offset.should == 10
+          items.total_items_in_view.should == 0
+          items.result.should == []
+        end
+
         it "should generate minimal xml and parse a response with one item" do
           client = Object.new
           items = test_find_item(client,

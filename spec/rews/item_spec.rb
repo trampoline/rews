@@ -2,6 +2,66 @@ require File.expand_path("../../spec_helper", __FILE__)
 
 module Rews
   describe Item do
+    describe "read_items" do
+      it "should parse a list of zero items correctly" do
+        c = Object.new
+        items = Item.read_items(c, nil)
+        items.should == []
+      end
+
+      it "should parse a list of one items correctly" do
+        c = Object.new
+        items = Item.read_items(c, {:message=>{:item_id=>{:id=>"abc", :change_key=>"def"}}})
+        items.length.should == 1
+        item = items.first
+        item.item_id.should == Item::ItemId.new(c, {:id=>"abc", :change_key=>"def"})
+        item.item_class.should == :message
+      end
+
+      it "should parse a list of more than one item correctly" do
+        c = Object.new
+        items = Item.read_items(c, {:message=>[{:item_id=>{:id=>"abc", :change_key=>"def"}},
+                                            {:item_id=>{:id=>"ghi", :change_key=>"jkl"}}]})
+        items.length.should == 2
+        item1 = items.first
+        item1.item_id.should == Item::ItemId.new(c, {:id=>"abc", :change_key=>"def"})
+        item1.item_class.should == :message
+        item2 = items.last
+        item2.item_id.should == Item::ItemId.new(c, {:id=>"ghi", :change_key=>"jkl"})
+        item2.item_class.should == :message
+      end
+    end
+
+    describe "read_get_item_response_messages" do
+      it "should parse a list of zero items correctly" do
+        c = Object.new
+        items = Item.read_get_item_response_messages(c, {:items=>nil})
+        items.should == []
+      end
+      
+      it "should parse a list of one items correctly" do
+        c = Object.new
+        items = Item.read_get_item_response_messages(c, {:items=>{:message=>{:item_id=>{:id=>"abc", :change_key=>"def"}}}})
+        items.length.should == 1
+        item = items.first
+        item.item_id.should == Item::ItemId.new(c, {:id=>"abc", :change_key=>"def"})
+        item.item_class.should == :message
+      end
+
+      it "should parse a list of more than one items correctly" do
+        c = Object.new
+        items = Item.read_get_item_response_messages(c, {:items=>{:message=>[{:item_id=>{:id=>"abc", :change_key=>"def"}},
+                                                                             {:item_id=>{:id=>"ghi", :change_key=>"jkl"}}]}})
+        items.length.should == 2
+        item1 = items.first
+        item1.item_id.should == Item::ItemId.new(c, {:id=>"abc", :change_key=>"def"})
+        item1.item_class.should == :message
+        item2 = items.last
+        item2.item_id.should == Item::ItemId.new(c, {:id=>"ghi", :change_key=>"jkl"})
+        item2.item_class.should == :message      
+      end
+    end
+
     describe Item::Item do
       it "should parse the item_id and attributes from the XML hash" do
         client = Object.new
