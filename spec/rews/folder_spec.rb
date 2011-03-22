@@ -154,6 +154,19 @@ module Rews
           
         end
 
+        it "should parse a response with no folders" do
+          client = Object.new
+          folders = test_find_folder(client,
+                                     {:base_shape=>:IdOnly},
+                                     nil,
+                                     nil,
+                                     {:includes_last_item_in_range=>false,
+                                       :indexed_paging_offset=>0,
+                                       :total_items_in_view=>0,
+                                       :folders=>nil})
+          folders.result.should == []
+        end
+
         it "should generate xml with indexed_page_folder_view and parse a response with multiple folders" do
           client = Object.new
           folders = test_find_folder(client,
