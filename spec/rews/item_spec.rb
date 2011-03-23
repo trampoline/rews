@@ -106,6 +106,7 @@ module Rews
           block = args.last # block is the last arg
 
           ctx = RequestProxy.new()
+          mock(ctx.http).headers.mock!["SOAPAction"]="\"#{SCHEMA_MESSAGES}/#{action}\""
           ns = Object.new
           mock(ctx.soap).namespaces{ns}
           mock(ns)["xmlns:t"]=Rews::SCHEMA_TYPES

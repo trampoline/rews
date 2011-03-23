@@ -93,6 +93,7 @@ module Rews
         opts = check_opts(GET_ITEM_OPTS, opts)
         r = with_error_check(client, :get_item_response,:response_messages,:get_item_response_message) do
           client.savon_client.request(:wsdl, "GetItem") do
+            http.headers["SOAPAction"] = "\"#{SCHEMA_MESSAGES}/GetItem\"" # required by EWS 2007
             soap.namespaces["xmlns:t"]=SCHEMA_TYPES
             
             xml = Builder::XmlMarkup.new
@@ -118,6 +119,7 @@ module Rews
         opts = check_opts(DELETE_ITEM_OPTS, opts)
         r = with_error_check(client, :delete_item_response, :response_messages, :delete_item_response_message) do
           client.savon_client.request(:wsdl, "DeleteItem", :DeleteType=>opts[:delete_type]) do
+            http.headers["SOAPAction"] = "\"#{SCHEMA_MESSAGES}/DeleteItem\"" # required by EWS 2007
             soap.namespaces["xmlns:t"]=SCHEMA_TYPES
             
             xml = Builder::XmlMarkup.new

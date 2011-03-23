@@ -2,8 +2,10 @@
 # like the Savon Client
 class RequestProxy
   attr_accessor :soap
+  attr_accessor :http
   def initialize
     @soap=Object.new
+    @http=Object.new
   end
 
   def eval_with_delegation(&block)
