@@ -1,6 +1,6 @@
 = rews
 
-Rews is a simple Ruby client for Exchange Web Services. It has been tested against Exchange 2007 SP1 and Exchange 2010 RTM
+Rews is a simple Ruby client for Exchange Web Services
 
 * Find, Get and Delete of Items and Folders is supported.
 * Filtering, ordering, and arbitrary property retrieval are supported.
@@ -9,6 +9,11 @@ Rews is a simple Ruby client for Exchange Web Services. It has been tested again
 
 Method names generally follow the Exchange Web Services API
 http://msdn.microsoft.com/en-us/library/bb409286(EXCHG.140).aspx 
+
+It has been tested against
+
+* Exchange 2007 SP1 (Version 8.1, Build 240.6)
+* Exchange 2010 SP1 (Version 14.1, Build 218.15)
 
 to use : 
 
@@ -36,11 +41,11 @@ to use :
 
 == Install
 
-slightly painful : to use NTLM authentication, you need versions of httpclient and ntlm-http 
-gems with fixes for NTLM authentication
+slightly painful : because of bugs in released versions of gems relating to NTLM authentication, you need 
+versions of httpclient and ntlm-http gems with fixes :
 
-  * httpclient branch ntlm_domain : https://github.com/mccraigmccraig/httpclient/tree/ntlm_domain
-  * ntlm-http branch fix_unicode : https://github.com/trampoline/ntlm-http/tree/fix_unicode
+  * httpclient v2.1.6.1.1 : branch ntlm_domain from : https://github.com/mccraigmccraig/httpclient/tree/ntlm_domain
+  * ntlm-http v0.1.1.1 : branch fix_ntlm_domain from: https://github.com/trampoline/ntlm-http/commits/fix_ntlm_domain
 
 then:
 
