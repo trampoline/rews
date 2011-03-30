@@ -48,10 +48,14 @@ module Rews
         }.should raise_error(Rews::Error)
       end
 
-      it "should tag any unexpected exceptions with the savon response" do
+      it "should log any unexpected exceptions and tag with the savon response" do
         client = Object.new
         exception = RuntimeError.new("boo")
-        mock(client).log.mock!.warn(exception)
+        mock(client).log do |block|
+          logger = Object.new
+          mock(logger).warn(exception)
+          block.call(logger)
+        end
 
         savon_response = Object.new
 

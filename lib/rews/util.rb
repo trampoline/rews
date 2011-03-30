@@ -82,7 +82,7 @@ module Rews
         
         errors = all_statuses.map{|s| single_error_check(client, s)}.compact
       rescue Exception=>e
-        client.log.warn(e)
+        client.log{|logger| logger.warn(e)}
         tag_exception(e, :savon_response=>response)
         raise e
       end
