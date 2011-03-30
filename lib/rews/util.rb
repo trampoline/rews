@@ -1,8 +1,18 @@
 require 'set'
 
 module Rews
+  class Error < RuntimeError
+  end
+
   module Util
     module_function
+
+    def tag_exception(e, tags)
+      tags.each do |k,v|
+        mc = class << e ; self ; end
+        mc.send(:define_method, k){v}
+      end
+    end
 
     # validates an options hash against a constraints hash
     # in the constraints hash :
@@ -59,19 +69,25 @@ module Rews
     def with_error_check(client, *response_msg_keys)
       raise "no block" if !block_given?
 
-      response = yield
-      hash_response = response.to_hash
-      statuses = hash_response.fetch_in(*response_msg_keys)
-
-      if statuses.is_a?(Array)
-        all_statuses = statuses
-      else
-        all_statuses = [statuses]
+      begin
+        response = yield
+        hash_response = response.to_hash
+        statuses = hash_response.fetch_in(*response_msg_keys)
+        
+        if statuses.is_a?(Array)
+          all_statuses = statuses
+        else
+          all_statuses = [statuses]
+        end
+        
+        errors = all_statuses.map{|s| single_error_check(client, s)}.compact
+      rescue Exception=>e
+        client.log.warn(e)
+        tag_exception(e, :savon_response=>response)
+        raise e
       end
 
-      errors = all_statuses.map{|s| single_error_check(client, s)}.compact
-      raise errors.join("\n") if !errors.empty?
-
+      raise Error.new(errors.join("\n")) if !errors.empty?
       statuses
     end
 

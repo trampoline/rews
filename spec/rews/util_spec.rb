@@ -36,7 +36,7 @@ module Rews
         end
       end
 
-      it "should raise if there are any errors" do
+      it "should raise a Rews::Error if there are any errors" do
         client = Object.new
         lambda {
           Util.with_error_check(client, :foo, :bar) do
@@ -45,8 +45,27 @@ module Rews
             mock(response).to_hash{response_hash}
             response
           end
-        }.should raise_error
+        }.should raise_error(Rews::Error)
       end
+
+      it "should tag any unexpected exceptions with the savon response" do
+        client = Object.new
+        exception = RuntimeError.new("boo")
+        mock(client).log.mock!.warn(exception)
+
+        savon_response = Object.new
+
+        lambda {
+          Util.with_error_check(client, :foo, :bar) do
+            mock(savon_response).to_hash{raise exception}
+            savon_response
+          end
+        }.should raise_error{|error|
+          error.respond_to?(:savon_response).should == true
+          error.savon_response.should == savon_response
+        }
+      end
+      
     end
 
     describe "single_error_check" do
