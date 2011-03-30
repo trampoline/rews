@@ -70,6 +70,14 @@ module Rews
         result[key]
       end
 
+      def first
+        result.first
+      end
+
+      def last
+        result.last
+      end
+
       def inspect
         attrs = VIEW_ATTRS.map{|attr| "@#{attr}=#{self.send(attr)}"}.join(", ")
         "#<#{self.class} #{attrs}, @result=#{@result.inspect}>"
