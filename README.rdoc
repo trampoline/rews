@@ -42,10 +42,11 @@ to use :
 == Install
 
 slightly painful : because of bugs in released versions of gems relating to NTLM authentication, you need 
-versions of httpclient and ntlm-http gems with fixes :
+versions of ntlm-http gem with fixes :
 
-  * httpclient v2.1.6.1.1 : branch ntlm_domain from : https://github.com/mccraigmccraig/httpclient/tree/ntlm_domain
-  * ntlm-http v0.1.1.1 : branch fix_ntlm_domain from: https://github.com/trampoline/ntlm-http/commits/fix_ntlm_domain
+  * ntlm-http v0.1.3 : branch fix_ntlm_domain from: https://github.com/trampoline/ntlm-http/tree/new-version-0.1.2.1
+
+also, httpclient >= 2.1.7 is supported 
 
 then:
 
