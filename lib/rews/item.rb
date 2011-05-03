@@ -134,6 +134,56 @@ module Rews
         true
       end
 
+      UPDATE_ITEM_OPTS = {
+        :conflict_resolution => "AutoResolve",
+        :message_disposition => "SaveOnly",
+        :ignore_change_keys=>false,
+        :updates => nil,
+      }
+
+      def update_item(opts={})
+        opts = check_opts(UPDATE_ITEM_OPTS, opts)
+        updates = [*opts[:updates]].compact
+        raise "no updates!" if updates.empty?
+        r = with_error_check(client, :update_item_response, :response_messages, :update_item_response_message) do
+          client.savon_client.request(:wsdl, "UpdateItem", 
+                                      :ConflictResolution=>opts[:conflict_resolution],
+                                      :MessageDisposition=>opts[:message_disposition]) do
+            http.headers["SOAPAction"] = "\"#{SCHEMA_MESSAGES}/UpdateItem\"" # required by EWS 2007
+            soap.namespaces["xmlns:t"]=SCHEMA_TYPES
+            
+            xml = Builder::XmlMarkup.new
+            
+            xml.wsdl :ItemChanges do
+              xml.wsdl :ItemChange do
+                xml << self.to_xml(opts[:ignore_change_keys])
+                xml.wsdl :Updates do
+                    updates.each do |update|
+                    xml << update.to_xml
+                  end
+                end
+              end
+            end
+            
+            soap.body = xml.target!
+          end
+        end
+        r
+      end
+
+      # sets message:isReadReceiptRequested and message:isDeliveryReceiptRequested
+      # properties of a message to false
+      def suppress_receipts(opts={})
+        update_item(:conflict_resolution=>"AlwaysOverwrite",
+                    :message_disposition=>"SaveOnly",
+                    :updates=>[SetItemField.new("message:IsReadReceiptRequested",
+                                                [:message, nil,
+                                                 [:is_read_receipt_requested, nil, "false"]]),
+                               SetItemField.new("message:IsDeliveryReceiptRequested",
+                                                [:message, nil,
+                                                 [:is_delivery_receipt_requested, nil, "false"]])])
+      end
+
       def to_xml(ignore_change_key=false)
         xml = Builder::XmlMarkup.new
         attrs = {:Id=>id.to_s}

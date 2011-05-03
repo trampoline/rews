@@ -4,7 +4,8 @@ class RequestProxy
   attr_accessor :soap
   attr_accessor :http
   def initialize
-    @soap=Object.new
+    soap_struct = Struct.new(:body)
+    @soap = soap_struct.new
     @http=Object.new
   end
 

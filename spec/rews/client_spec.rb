@@ -17,5 +17,6 @@ module Rews
 
       client.distinguished_folder_id('inbox')
     end
+
   end
 end

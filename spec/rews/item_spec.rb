@@ -2,15 +2,23 @@ require File.expand_path("../../spec_helper", __FILE__)
 
 module Rews
   describe Item do
+    def client
+      # a client which logs, so exceptions don't go missing
+      c = Object.new
+      logger = Logger.new($stderr)
+      stub(c).log{|block| block.call(logger)}
+      nil
+    end
+
     describe "read_items" do
       it "should parse a list of zero items correctly" do
-        c = Object.new
+        c = client
         items = Item.read_items(c, nil)
         items.should == []
       end
 
       it "should parse a list of one items correctly" do
-        c = Object.new
+        c = client
         items = Item.read_items(c, {:message=>{:item_id=>{:id=>"abc", :change_key=>"def"}}})
         items.length.should == 1
         item = items.first
@@ -19,7 +27,7 @@ module Rews
       end
 
       it "should parse a list of more than one item correctly" do
-        c = Object.new
+        c = client
         items = Item.read_items(c, {:message=>[{:item_id=>{:id=>"abc", :change_key=>"def"}},
                                             {:item_id=>{:id=>"ghi", :change_key=>"jkl"}}]})
         items.length.should == 2
@@ -34,13 +42,13 @@ module Rews
 
     describe "read_get_item_response_messages" do
       it "should parse a list of zero items correctly" do
-        c = Object.new
+        c = client
         items = Item.read_get_item_response_messages(c, {:items=>nil})
         items.should == []
       end
       
       it "should parse a list of one items correctly" do
-        c = Object.new
+        c = client
         items = Item.read_get_item_response_messages(c, {:items=>{:message=>{:item_id=>{:id=>"abc", :change_key=>"def"}}}})
         items.length.should == 1
         item = items.first
@@ -49,7 +57,7 @@ module Rews
       end
 
       it "should parse a list of more than one items correctly" do
-        c = Object.new
+        c = client
         items = Item.read_get_item_response_messages(c, {:items=>{:message=>[{:item_id=>{:id=>"abc", :change_key=>"def"}},
                                                                              {:item_id=>{:id=>"ghi", :change_key=>"jkl"}}]}})
         items.length.should == 2
@@ -64,13 +72,13 @@ module Rews
 
     describe Item::Item do
       it "should parse the item_id and attributes from the XML hash" do
-        client = Object.new
+        c = client
 
-        i = Item::Item.new(client, 'Message', {:item_id=>{:id=>'1234', :change_key=>'abcd'}, :foo=>100})
+        i = Item::Item.new(c, 'Message', {:item_id=>{:id=>'1234', :change_key=>'abcd'}, :foo=>100})
 
-        i.client.should == client
+        i.client.should == c
         i.item_class.should == 'Message'
-        i.item_id.should == Item::ItemId.new(client, {:id=>'1234', :change_key=>'abcd'})
+        i.item_id.should == Item::ItemId.new(c, {:id=>'1234', :change_key=>'abcd'})
 
         i[:foo].should == 100
       end
@@ -80,8 +88,8 @@ module Rews
 
       describe "to_xml" do
         it "should generate an ItemId with change_key by default" do
-          client = Object.new
-          xml = Item::ItemId.new(client, {:id=>"abc", :change_key=>"def"}).to_xml
+          c = client
+          xml = Item::ItemId.new(c, {:id=>"abc", :change_key=>"def"}).to_xml
           doc = Nokogiri::XML(xml)
           id=doc.children.first
           id.name.should == "ItemId"
@@ -90,8 +98,8 @@ module Rews
         end
 
         it "should generate an ItemId without change_key if requested" do
-          client = Object.new
-          xml = Item::ItemId.new(client, {:id=>"abc", :change_key=>"def"}).to_xml(true)
+          c = client
+          xml = Item::ItemId.new(c, {:id=>"abc", :change_key=>"def"}).to_xml(true)
           doc = Nokogiri::XML(xml)
           id=doc.children.first
           id.name.should == "ItemId"
@@ -100,7 +108,7 @@ module Rews
         end
       end
 
-      def mock_request(client, action, attrs, response)
+      def mock_request(client, action, attrs, response, &validate_block)
         # deal with different call arity
         mock(client).savon_client.mock!.request(*[:wsdl, action, attrs].compact) do |*args|
           block = args.last # block is the last arg
@@ -110,9 +118,11 @@ module Rews
           ns = Object.new
           mock(ctx.soap).namespaces{ns}
           mock(ns)["xmlns:t"]=Rews::SCHEMA_TYPES
-          mock(ctx.soap).body=(anything)
-          
+#          mock(ctx.soap).body=(anything)
+
           ctx.eval_with_delegation(&block)
+
+          validate_block.call(ctx.soap.body) if validate_block
           response
         end
       end
@@ -138,23 +148,23 @@ module Rews
         end
 
         it "should generate the BaseShape and ItemId xml and parse the response" do
-          client = Object.new
-          msg = test_get_item(client,
+          c = client
+          msg = test_get_item(c,
                               {:base_shape=>:IdOnly}, 
                               nil, 
                               {:message=>{:item_id=>{:id=>"abc", :change_key=>"def"}}})
           msg.item_class.should == :message
-          msg.item_id.should == Item::ItemId.new(client, :id=>"abc", :change_key=>"def")
+          msg.item_id.should == Item::ItemId.new(c, :id=>"abc", :change_key=>"def")
         end
 
         it "should generate a request with no change_key if specified" do
-          client = Object.new
-          msg = test_get_item(client,
+          c = client
+          msg = test_get_item(c,
                               {:base_shape=>:Default}, 
                               true, 
                               {:message=>{:item_id=>{:id=>"abc", :change_key=>"def"}}})
           msg.item_class.should == :message
-          msg.item_id.should == Item::ItemId.new(client, :id=>"abc", :change_key=>"def")
+          msg.item_id.should == Item::ItemId.new(c, :id=>"abc", :change_key=>"def")
         end
 
       end
@@ -176,9 +186,58 @@ module Rews
         end
 
         it "should generate the ItemId xml and parse the response" do
-          client = Object.new
-          msg = test_delete_item(client, true, :HardDelete)
+          c = client
+          msg = test_delete_item(c, true, :HardDelete)
         end
+      end
+
+      describe "update_item" do
+        def test_update_item(client, 
+                             conflict_resolution,
+                             message_disposition, 
+                             ignore_change_keys,
+                             updates,
+                             &validate_block)
+
+          iid = Item::ItemId.new(client, {:id=>"abc", :change_key=>"def"})
+          mock.proxy(iid).to_xml(ignore_change_keys){""}
+
+          response = Object.new
+          mock(response).to_hash{{:update_item_response=>{:response_messages=>{:update_item_response_message=>{:response_class=>"Success"}}}}}
+
+          mock_request(client, "UpdateItem", 
+                       { :ConflictResolution=>conflict_resolution,
+                         :MessageDisposition=>message_disposition},
+                       response,
+                       &validate_block)
+
+          opts={}
+          opts[:conflict_resolution]=conflict_resolution if conflict_resolution
+          opts[:message_disposition]=message_disposition if message_disposition
+          opts[:ignore_change_keys]=ignore_change_keys if !ignore_change_keys.nil?
+          opts[:updates]=updates
+          iid.update_item(opts)
+        end
+
+        it "should generate the ItemId xml and parse the response" do
+          c = client
+          update=Object.new
+          stub(update).to_xml{""}
+          msg = test_update_item(c, "AutoResolve", "SaveOnly", false, update) do |body|
+            $stderr << body.inspect
+            body.should_not == nil
+          end
+        end
+
+        it "should raise an exception if no updates are given" do
+          c = client
+          iid = Item::ItemId.new(c, {:id=>"abc", :change_key=>"def"})
+
+          lambda {
+            iid.update_item({})
+          }.should raise_error(/no updates/)
+        end
+        
       end
     end
   end

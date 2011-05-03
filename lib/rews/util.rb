@@ -82,7 +82,7 @@ module Rews
         
         errors = all_statuses.map{|s| single_error_check(client, s)}.compact
       rescue Exception=>e
-        client.log{|logger| logger.warn(e)}
+        Rews.log{|logger| logger.warn(e)}
         tag_exception(e, :savon_response=>response)
         raise e
       end
@@ -102,7 +102,7 @@ module Rews
       if status[:response_class] == "Error"
         return "#{status[:response_code]} - #{status[:message_text]}"
       elsif status[:response_class] == "Warning"
-        client.log{|logger| logger.warn("#{status[:response_code]} - #{status[:message_text]}")}
+        Rews.log{|logger| logger.warn("#{status[:response_code]} - #{status[:message_text]}")}
       end
     end
   end

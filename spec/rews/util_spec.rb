@@ -51,7 +51,7 @@ module Rews
       it "should log any unexpected exceptions and tag with the savon response" do
         client = Object.new
         exception = RuntimeError.new("boo")
-        mock(client).log do |block|
+        mock(Rews).log do |block|
           logger = Object.new
           mock(logger).warn(exception)
           block.call(logger)
@@ -82,7 +82,7 @@ module Rews
       it "should log a warning and return if the response_class is Warning" do
         client = Object.new
         status = {:response_class=>"Warning", :message_text=>"boo", :response_code=>"BooWarning"}
-        mock(client).log() do |p|
+        mock(Rews).log() do |p|
           logger = Object.new
           mock(logger).warn("BooWarning - boo")
           p.call(logger)

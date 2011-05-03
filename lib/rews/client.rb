@@ -5,7 +5,6 @@ module Rews
     attr_reader :user
     attr_reader :password
     attr_reader :savon_client
-    attr_accessor :logdev
 
     # create a +Client+ to access Exchange Web Services
     # * using NTLM authentication
@@ -37,16 +36,6 @@ module Rews
     #  client.distinguished_folder_id('inbox', 'foo@bar.com')
     def distinguished_folder_id(id, mailbox_email=nil)
       Folder::DistinguishedFolderId.new(self, id, mailbox_email)
-    end
-
-    # yield a +Logger+ if +logdev+ has been set
-    def log
-      yield logger if @logdev
-    end
-
-    def logger
-      return @logger if @logger
-      @logger = Logger.new(@logdev) if @logdev
     end
   end
 end
