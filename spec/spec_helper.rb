@@ -6,6 +6,7 @@ require 'spec'
 require 'spec/autorun'
 require 'rr'
 require 'nokogiri'
+require 'rsxml'
 require 'request_proxy'
 
 Spec::Runner.configure do |config|

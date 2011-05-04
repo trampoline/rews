@@ -155,9 +155,9 @@ module Rews
             xml = Builder::XmlMarkup.new
             
             xml.wsdl :ItemChanges do
-              xml.wsdl :ItemChange do
+              xml.t :ItemChange do
                 xml << self.to_xml(opts[:ignore_change_keys])
-                xml.wsdl :Updates do
+                xml.t :Updates do
                     updates.each do |update|
                     xml << update.to_xml
                   end

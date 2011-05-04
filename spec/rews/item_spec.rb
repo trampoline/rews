@@ -3,11 +3,7 @@ require File.expand_path("../../spec_helper", __FILE__)
 module Rews
   describe Item do
     def client
-      # a client which logs, so exceptions don't go missing
-      c = Object.new
-      logger = Logger.new($stderr)
-      stub(c).log{|block| block.call(logger)}
-      nil
+      Object.new
     end
 
     describe "read_items" do
@@ -200,7 +196,7 @@ module Rews
                              &validate_block)
 
           iid = Item::ItemId.new(client, {:id=>"abc", :change_key=>"def"})
-          mock.proxy(iid).to_xml(ignore_change_keys){""}
+          mock.proxy(iid).to_xml(ignore_change_keys)
 
           response = Object.new
           mock(response).to_hash{{:update_item_response=>{:response_messages=>{:update_item_response_message=>{:response_class=>"Success"}}}}}
@@ -219,13 +215,16 @@ module Rews
           iid.update_item(opts)
         end
 
-        it "should generate the ItemId xml and parse the response" do
+        it "should generate the body xml and parse the response" do
           c = client
           update=Object.new
-          stub(update).to_xml{""}
+          stub(update).to_xml{"blahblah"}
           msg = test_update_item(c, "AutoResolve", "SaveOnly", false, update) do |body|
-            $stderr << body.inspect
-            body.should_not == nil
+            rsxml = Rsxml.to_rsxml(body, :wsdl=>"ews_wsdl", :t=>"ews_types")
+            rsxml.should == ["wsdl:ItemChanges", {"xmlns:wsdl"=>"ews_wsdl", "xmlns:t"=>"ews_types"},
+                             ["t:ItemChange",
+                              ["t:ItemId", {"Id"=>"abc", "ChangeKey"=>"def"}],
+                              ["t:Updates", "blahblah"]]]
           end
         end
 
@@ -237,7 +236,48 @@ module Rews
             iid.update_item({})
           }.should raise_error(/no updates/)
         end
-        
+
+      end
+
+      describe "suppress_receipts" do
+        def test_suppress_receipts(client, 
+                                   &validate_block)
+
+          iid = Item::ItemId.new(client, {:id=>"abc", :change_key=>"def"})
+          mock.proxy(iid).to_xml(nil)
+
+          response = Object.new
+          mock(response).to_hash{{:update_item_response=>{:response_messages=>{:update_item_response_message=>{:response_class=>"Success"}}}}}
+
+          mock_request(client, "UpdateItem", 
+                       { :ConflictResolution=>"AlwaysOverwrite",
+                         :MessageDisposition=>"SaveOnly"},
+                       response,
+                       &validate_block)
+
+          opts={}
+          opts[:conflict_resolution]="AlwaysOverwrite"
+          opts[:message_disposition]="SaveOnly"
+          iid.suppress_receipts(opts)
+        end
+
+        it "should generate the body xml and parse the response" do
+          c = client
+          test_suppress_receipts(c) do |body|
+            rsxml = Rsxml.to_rsxml(body, :wsdl=>"ews_wsdl", :t=>"ews_types", ""=>"ews_wsdl")
+            rsxml.should == ["wsdl:ItemChanges", {"xmlns:wsdl"=>"ews_wsdl", "xmlns:t"=>"ews_types", "xmlns"=>"ews_wsdl"},
+                             ["t:ItemChange",
+                              ["t:ItemId", {"Id"=>"abc", "ChangeKey"=>"def"}],
+                              ["t:Updates",
+                               ["t:SetItemField",
+                                ["t:FieldURI", {"FieldURI"=>"message:IsReadReceiptRequested"}],
+                                ["t:Message", ["t:IsReadReceiptRequested", "false"]]],
+                               ["t:SetItemField",
+                                ["t:FieldURI", {"FieldURI"=>"message:IsDeliveryReceiptRequested"}],
+                                ["t:Message", ["t:IsDeliveryReceiptRequested", "false"]]]]]]
+          end
+          
+        end
       end
     end
   end

@@ -17,6 +17,7 @@ begin
     gem.add_development_dependency "rspec", ">= 1.2.9"
     gem.add_development_dependency "rr", ">= 0.10.5"
     gem.add_development_dependency "nokogiri", ">= 1.4.4"
+    gem.add_development_dependency "rsxml", ">= 0.1.0"
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
   end
   Jeweler::GemcutterTasks.new

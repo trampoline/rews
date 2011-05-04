@@ -21,7 +21,7 @@ module Rews
       
       def write_update(type, field_uri, item_expr)
         xml = Builder::XmlMarkup.new
-        xml.wsdl(update_tag(type)) do
+        xml.t(update_tag(type)) do
           xml.t :FieldURI, :FieldURI=>field_uri
           write_item_sexp(xml, item_expr)
         end
