@@ -46,12 +46,18 @@ module Rews
       :send_meeting_invitations=>nil
     }
 
-    # create items, specifying a 
+    # create items, specifying a list of Rsxml expressions, one for each item in the Items list e.g.
+    # 
+    #  client.create_item(:items=>[[:suppress_read_receipt, [:reference_item_id, {:id=>"abc", :change_key=>"def"}]]])
     def create_item(opts={})
       opts = check_opts(CREATE_ITEM_OPTS, opts)
       
       items = opts[:items].compact if opts[:items]
       raise "no items!" if items.empty?
+
+      attrs = {}
+      attrs[:message_disposition] = opts[:message_disposition] if opts[:message_disposition]
+      attrs[:send_meeting_invitations] = opts[:send_meeting_invitations] if opts[:send_meeting_invitations]
 
       r = with_error_check(self, :create_item_response, :response_messages, :create_item_response_message) do
         savon_client.request(:wsdl, "CreateItem", attrs) do
@@ -72,6 +78,30 @@ module Rews
         end
       end
       r
+    end
+
+    # +iids+ is a list of Items or ItemIds. If +iids+ is a list of Items,
+    # and those Items have IsRead and IsReadReceiptRequested properties then
+    # no SuppressReadReceipt Item will be created if (IsRead=true or
+    # IsReadReceiptRequested=false)
+    def suppress_read_receipts(iids)
+      items = iids.map do |item_or_item_id|
+        item_id = item_or_item_id.is_a?(Item::Item) ? item_or_item_id.item_id : item_or_item_id
+        srr = [:suppress_read_receipt, [:reference_item_id, {:id=>item_id.id, :change_key=>item_id.change_key}]]
+        if item_or_item_id.is_a?(Item::Item)
+          attributes = item_or_item_id.attributes
+          if (attributes.has_key?(:is_read) && attributes[:is_read]) || 
+              (attributes.has_key?(:is_read_receipt_requested) &&
+               !attributes[:is_read_receipt_requested])
+            next
+          else
+            srr
+          end
+        else
+          srr
+        end
+      end.compact
+      create_item(:items=>items)
     end
   end
 end

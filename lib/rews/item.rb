@@ -32,7 +32,7 @@ module Rews
         @client = client
         @item_id = ItemId.new(client, attributes[:item_id])
         @item_class = item_class
-        @attributes = attributes
+        @attributes = attributes || {}
       end
 
       def ==(other)
