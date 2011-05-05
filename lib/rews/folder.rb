@@ -253,6 +253,51 @@ module Rews
         end
         true
       end
+
+      UPDATE_ITEM_OPTS = {
+        :conflict_resolution => "AutoResolve",
+        :message_disposition => "SaveOnly",
+        :ignore_change_keys=>false,
+        :updates => nil,
+      }
+
+      # bulk update a bunch of Items in one API hit
+      # takes a list of <tt>Item::ItemId</tt>s, or a list of <tt>Item::Item</tt>,
+      # or a <tt>Folder::FindResult</tt> and applies the same set of updates to each of them
+      def update_item(message_ids, opts={})
+        opts = check_opts(UPDATE_ITEM_OPTS, opts)
+        message_ids = message_ids.result if message_ids.is_a?(FindResult)
+
+        updates = [*opts[:updates]].compact
+        raise "no updates!" if updates.empty?
+        r = with_error_check(client, :update_item_response, :response_messages, :update_item_response_message) do
+          client.savon_client.request(:wsdl, "UpdateItem", 
+                                      :ConflictResolution=>opts[:conflict_resolution],
+                                      :MessageDisposition=>opts[:message_disposition]) do
+            http.headers["SOAPAction"] = "\"#{SCHEMA_MESSAGES}/UpdateItem\"" # required by EWS 2007
+            soap.namespaces["xmlns:t"]=SCHEMA_TYPES
+            
+            xml = Builder::XmlMarkup.new
+            
+            xml.wsdl :ItemChanges do
+              message_ids.each do |mid|
+                mid = mid.item_id if mid.is_a?(Item::Item)
+                xml.t :ItemChange do
+                  xml << mid.to_xml(opts[:ignore_change_keys])
+                  xml.t :Updates do
+                    updates.each do |update|
+                      xml << update.to_xml
+                    end
+                  end
+                end
+              end
+            end
+            
+            soap.body = xml.target!
+          end
+        end
+        r
+      end
     end
 
     # identifies a regular (non-distinguished) Folder on an Exchange server

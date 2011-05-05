@@ -430,6 +430,93 @@ module Rews
                                                         Item::Item.new(client, :message, {:item_id=>{:id=>"ghi", :change_key=>"jkl"}})]})
         end
       end
+
+      describe "update_item" do
+        def test_update_item(client,
+                             conflict_resolution, 
+                             message_disposition,
+                             ignore_change_keys,
+                             updates,
+                             message_ids,
+                             &validate_block)
+          
+          fid = Folder::DistinguishedFolderId.new(client, 'blah')
+
+          message_ids = message_ids.result if message_ids.is_a?(Folder::FindResult)
+          message_ids.each do |mid|
+            if mid.is_a?(Item::Item)
+              proy(mid.item_id).to_xml(ignore_change_keys)
+            else
+              proxy(mid).to_xml(ignore_change_keys)
+            end
+          end
+          
+          response = Object.new
+          mock(response).to_hash{{:update_item_response=>{:response_messages=>{:update_item_response_message=>{:response_class=>"Success"}}}}}
+          
+          RequestProxy.mock_request(self, client, "UpdateItem",  
+                                    { :ConflictResolution=>conflict_resolution || "AutoResolve",
+                                      :MessageDisposition=>message_disposition || "SaveOnly"}, 
+                                    response,
+                                    &validate_block)
+          
+          opts = {}
+          opts[:conflict_resolution]=conflict_resolution if conflict_resolution
+          opts[:message_disposition]=message_disposition if message_disposition
+          opts[:ignore_change_keys]=ignore_change_keys if !ignore_change_keys.nil?
+          opts[:updates]=updates
+          fid.update_item(message_ids, opts)
+        end
+
+        it "should generate body xml and parse response for a single update" do
+          client = Object.new
+          test_update_item(client, nil, nil, nil,
+                           SetItemField.new("message:IsRead", [:message, [:is_read, "true"]]),
+                           [Item::ItemId.new(client, :id=>"abc", :change_key=>"def")]) do |body|
+            
+            rsxml = Rsxml.to_rsxml(body, :ns=>{:wsdl=>"ews_wsdl", :t=>"ews_types", ""=>"ews_wsdl"})
+            Rsxml.compare(rsxml, ["wsdl:ItemChanges", {"xmlns:wsdl"=>"ews_wsdl", "xmlns:t"=>"ews_types", "xmlns"=>"ews_wsdl"},
+                                  ["t:ItemChange",
+                                   ["t:ItemId", {"Id"=>"abc", "ChangeKey"=>"def"}],
+                                   ["t:Updates",
+                                    ["t:SetItemField",
+                                     ["t:FieldURI", {"FieldURI"=>"message:IsRead"}],
+                                     ["t:Message", ["t:IsRead", "true"]]]]]]).should == true  
+          end
+        end
+        
+        it "should generate body xml and parse response for a multiple updates of multiple items" do
+          client = Object.new
+          test_update_item(client, nil, nil, nil,
+                           [SetItemField.new("message:IsRead", [:message, [:is_read, "true"]]),
+                            SetItemField.new("item:Blah", [:item, [:blah, "blah"]])],
+                           [Item::ItemId.new(client, :id=>"abc", :change_key=>"def"),
+                            Item::ItemId.new(client, :id=>"ghi", :change_key=>"jkl")]) do |body|
+            
+            rsxml = Rsxml.to_rsxml(body, :ns=>{:wsdl=>"ews_wsdl", :t=>"ews_types", ""=>"ews_wsdl"})
+            Rsxml.compare(rsxml, ["wsdl:ItemChanges", {"xmlns:wsdl"=>"ews_wsdl", "xmlns:t"=>"ews_types", "xmlns"=>"ews_wsdl"},
+                                  ["t:ItemChange",
+                                   ["t:ItemId", {"Id"=>"abc", "ChangeKey"=>"def"}],
+                                   ["t:Updates",
+                                    ["t:SetItemField",
+                                     ["t:FieldURI", {"FieldURI"=>"message:IsRead"}],
+                                     ["t:Message", ["t:IsRead", "true"]]],
+                                    ["t:SetItemField",
+                                     ["t:FieldURI", {"FieldURI"=>"item:Blah"}],
+                                     ["t:Item", ["t:Blah", "blah"]]]]],
+                                  ["t:ItemChange",
+                                   ["t:ItemId", {"Id"=>"ghi", "ChangeKey"=>"jkl"}],
+                                   ["t:Updates",
+                                    ["t:SetItemField",
+                                     ["t:FieldURI", {"FieldURI"=>"message:IsRead"}],
+                                     ["t:Message", ["t:IsRead", "true"]]],
+                                    ["t:SetItemField",
+                                     ["t:FieldURI", {"FieldURI"=>"item:Blah"}],
+                                     ["t:Item", ["t:Blah", "blah"]]]]]]).should == true  
+          end
+        end
+        
+      end
     end
   end
 end

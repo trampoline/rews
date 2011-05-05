@@ -81,9 +81,9 @@ module Rews
     end
 
     # +iids+ is a list of Items or ItemIds. If +iids+ is a list of Items,
-    # and those Items have IsRead and IsReadReceiptRequested properties then
-    # no SuppressReadReceipt Item will be created if (IsRead=true or
-    # IsReadReceiptRequested=false)
+    # and those Items have +IsRead+ or +IsReadReceiptRequested+ properties then
+    # no +SuppressReadReceipt+ Item will be created if ( +IsRead+=true or
+    # +IsReadReceiptRequested+=false)
     def suppress_read_receipts(iids)
       items = iids.map do |item_or_item_id|
         item_id = item_or_item_id.is_a?(Item::Item) ? item_or_item_id.item_id : item_or_item_id
