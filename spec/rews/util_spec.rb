@@ -25,6 +25,15 @@ module Rews
       end
     end
 
+    describe "rsxml_to_xml" do
+      it "should camelize tags and attribute names, and prefix tags with t:" do
+        Util.rsxml_to_xml([:foo]).should == "<t:Foo></t:Foo>"
+        Util.rsxml_to_xml([:foo_foo, {:bar_bar=>"blah"}]).should == '<t:FooFoo BarBar="blah"></t:FooFoo>'
+        Util.rsxml_to_xml([:foo_foo, {:bar_bar=>"blah"}, "foofoo", [:baz_baz, {:boo_hoo=>"10"}, "bazbaz"]]).should ==
+          '<t:FooFoo BarBar="blah">foofoo<t:BazBaz BooHoo="10">bazbaz</t:BazBaz></t:FooFoo>'
+      end
+    end
+
     describe "with_error_check" do
       it "should yield, convert the response to a hash and fetch_in the status" do
         client = Object.new

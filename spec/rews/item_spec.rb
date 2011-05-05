@@ -25,7 +25,7 @@ module Rews
       it "should parse a list of more than one item correctly" do
         c = client
         items = Item.read_items(c, {:message=>[{:item_id=>{:id=>"abc", :change_key=>"def"}},
-                                            {:item_id=>{:id=>"ghi", :change_key=>"jkl"}}]})
+                                               {:item_id=>{:id=>"ghi", :change_key=>"jkl"}}]})
         items.length.should == 2
         item1 = items.first
         item1.item_id.should == Item::ItemId.new(c, {:id=>"abc", :change_key=>"def"})
@@ -104,25 +104,6 @@ module Rews
         end
       end
 
-      def mock_request(client, action, attrs, response, &validate_block)
-        # deal with different call arity
-        mock(client).savon_client.mock!.request(*[:wsdl, action, attrs].compact) do |*args|
-          block = args.last # block is the last arg
-
-          ctx = RequestProxy.new()
-          mock(ctx.http).headers.mock!["SOAPAction"]="\"#{SCHEMA_MESSAGES}/#{action}\""
-          ns = Object.new
-          mock(ctx.soap).namespaces{ns}
-          mock(ns)["xmlns:t"]=Rews::SCHEMA_TYPES
-#          mock(ctx.soap).body=(anything)
-
-          ctx.eval_with_delegation(&block)
-
-          validate_block.call(ctx.soap.body) if validate_block
-          response
-        end
-      end
-
       describe "get_item" do
         def test_get_item(client, item_shape, ignore_change_keys, result)
           shape = Object.new
@@ -135,7 +116,7 @@ module Rews
           response = Object.new
           mock(response).to_hash{{:get_item_response=>{:response_messages=>{:get_item_response_message=>{:response_class=>"Success", :items=>result}}}}}
 
-          mock_request(client, "GetItem", nil, response)
+          RequestProxy.mock_request(self, client, "GetItem", nil, response)
 
           opts={}
           opts[:item_shape]=item_shape if item_shape
@@ -173,7 +154,7 @@ module Rews
           response = Object.new
           mock(response).to_hash{{:delete_item_response=>{:response_messages=>{:delete_item_response_message=>{:response_class=>"Success"}}}}}
 
-          mock_request(client, "DeleteItem", {:DeleteType=>delete_type}, response)
+          RequestProxy.mock_request(self, client, "DeleteItem", {:DeleteType=>delete_type}, response)
 
           opts={}
           opts[:ignore_change_keys]=ignore_change_keys if ignore_change_keys
@@ -201,7 +182,7 @@ module Rews
           response = Object.new
           mock(response).to_hash{{:update_item_response=>{:response_messages=>{:update_item_response_message=>{:response_class=>"Success"}}}}}
 
-          mock_request(client, "UpdateItem", 
+          RequestProxy.mock_request(self, client, "UpdateItem", 
                        { :ConflictResolution=>conflict_resolution,
                          :MessageDisposition=>message_disposition},
                        response,
@@ -220,7 +201,7 @@ module Rews
           update=Object.new
           stub(update).to_xml{"blahblah"}
           msg = test_update_item(c, "AutoResolve", "SaveOnly", false, update) do |body|
-            rsxml = Rsxml.to_rsxml(body, :wsdl=>"ews_wsdl", :t=>"ews_types")
+            rsxml = Rsxml.to_rsxml(body, :ns=>{:wsdl=>"ews_wsdl", :t=>"ews_types"})
             rsxml.should == ["wsdl:ItemChanges", {"xmlns:wsdl"=>"ews_wsdl", "xmlns:t"=>"ews_types"},
                              ["t:ItemChange",
                               ["t:ItemId", {"Id"=>"abc", "ChangeKey"=>"def"}],
@@ -240,8 +221,9 @@ module Rews
       end
 
       describe "suppress_receipts" do
-        def test_suppress_receipts(client, 
-                                   &validate_block)
+        def test_set_is_read(client, 
+                             is_read,
+                             &validate_block)
 
           iid = Item::ItemId.new(client, {:id=>"abc", :change_key=>"def"})
           mock.proxy(iid).to_xml(nil)
@@ -249,7 +231,7 @@ module Rews
           response = Object.new
           mock(response).to_hash{{:update_item_response=>{:response_messages=>{:update_item_response_message=>{:response_class=>"Success"}}}}}
 
-          mock_request(client, "UpdateItem", 
+          RequestProxy.mock_request(self, client, "UpdateItem", 
                        { :ConflictResolution=>"AlwaysOverwrite",
                          :MessageDisposition=>"SaveOnly"},
                        response,
@@ -258,23 +240,20 @@ module Rews
           opts={}
           opts[:conflict_resolution]="AlwaysOverwrite"
           opts[:message_disposition]="SaveOnly"
-          iid.suppress_receipts(opts)
+          iid.set_is_read(is_read)
         end
 
         it "should generate the body xml and parse the response" do
           c = client
-          test_suppress_receipts(c) do |body|
-            rsxml = Rsxml.to_rsxml(body, :wsdl=>"ews_wsdl", :t=>"ews_types", ""=>"ews_wsdl")
-            rsxml.should == ["wsdl:ItemChanges", {"xmlns:wsdl"=>"ews_wsdl", "xmlns:t"=>"ews_types", "xmlns"=>"ews_wsdl"},
-                             ["t:ItemChange",
-                              ["t:ItemId", {"Id"=>"abc", "ChangeKey"=>"def"}],
-                              ["t:Updates",
-                               ["t:SetItemField",
-                                ["t:FieldURI", {"FieldURI"=>"message:IsReadReceiptRequested"}],
-                                ["t:Message", ["t:IsReadReceiptRequested", "false"]]],
-                               ["t:SetItemField",
-                                ["t:FieldURI", {"FieldURI"=>"message:IsDeliveryReceiptRequested"}],
-                                ["t:Message", ["t:IsDeliveryReceiptRequested", "false"]]]]]]
+          test_set_is_read(c, true) do |body|
+            rsxml = Rsxml.to_rsxml(body, :ns=>{:wsdl=>"ews_wsdl", :t=>"ews_types", ""=>"ews_wsdl"})
+            Rsxml.compare(rsxml, ["wsdl:ItemChanges", {"xmlns:wsdl"=>"ews_wsdl", "xmlns:t"=>"ews_types", "xmlns"=>"ews_wsdl"},
+                                  ["t:ItemChange",
+                                   ["t:ItemId", {"Id"=>"abc", "ChangeKey"=>"def"}],
+                                   ["t:Updates",
+                                    ["t:SetItemField",
+                                     ["t:FieldURI", {"FieldURI"=>"message:IsRead"}],
+                                     ["t:Message", ["t:IsRead", "true"]]]]]]).should == true
           end
           
         end

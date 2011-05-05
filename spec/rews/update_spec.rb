@@ -1,70 +1,13 @@
 require File.expand_path("../../spec_helper", __FILE__)
 
 module Rews
-  describe Update do
-    describe Update::Xml do
-      describe "write_item_sexp" do
-        def write_item_sexp(sexp)
-          builder = Builder::XmlMarkup.new
-          Update::Xml.write_item_sexp(builder, sexp)
-          xml = builder.target!
-          Nokogiri::XML(xml).children.first
-        end
-
-        it "should write a bare element to xml" do
-          x = write_item_sexp([:item])
-          x.name.should == "Item"
-          x.attributes.should == {}
-        end
-
-        it "should write an element with attributes to xml" do
-          x = write_item_sexp([:meep, {:foo=>10, :bar=>"baz"}])
-          x.name.should == "Meep"
-          x["Foo"].should == "10"
-          x["Bar"].should == "baz"
-        end
-
-        it "should write a nested element with attributes to xml" do
-          x = write_item_sexp([:foo, nil, [:bar, {:a=>10, :b=>"boo"}]])
-          x.name.should == "Foo"
-          x.attributes.should == {}
-          bar = x.children.first
-          bar.name.should == "Bar"
-          bar["A"].should == "10"
-          bar["B"].should == "boo"
-        end
-
-        it "should write multiple child elements to xml" do
-          x = write_item_sexp([:foo, nil, [:bar, {:a=>10, :b=>"boo"}], [:baz, {:c=>"c", :doo=>"wop"}]])
-          x.name.should == "Foo"
-          x.attributes.should == {}
-          bar = x.children.first
-          bar.name.should == "Bar"
-          bar["A"].should == "10"
-          bar["B"].should == "boo"
-          baz = x.children[1]
-          baz.name.should == "Baz"
-          baz["C"].should == "c"
-          baz["Doo"].should == "wop"
-        end
-
-        it "should write text content to xml" do
-          x = write_item_sexp([:foo, nil, "FooFoo"])
-          x.name.should == "Foo"
-          x.attributes.should == {}
-          x.children.length.should == 1
-          x.children.first.to_s.should == "FooFoo"
-        end
-      end
-    end
-  end
 
   describe SetItemField do
     it "should write Update xml" do
       xml = SetItemField.new("item:ResponseObjects", 
-                             [:item, nil, 
-                              [:response_objects, nil, 
-                               [:suppress_read_receipt, nil,
+                             [:item, 
+                              [:response_objects, 
+                               [:suppress_read_receipt,
                                 [:reference_item_id, {:id=>"foofoo123", :change_key=>"blahblah"}]]]]).to_xml
       doc=Nokogiri::XML(xml).children.first
       doc.name.should == "SetItemField"

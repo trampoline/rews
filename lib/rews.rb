@@ -4,6 +4,7 @@ require 'net/ntlm'
 # require 'httpclient' # don't need httpclient now ntlm-http is fixed too
 require 'savon'
 require 'fetch_in'
+require 'rsxml'
 
 # Ruby Exchange Web Services
 module Rews

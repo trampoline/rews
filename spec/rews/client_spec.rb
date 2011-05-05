@@ -18,5 +18,7 @@ module Rews
       client.distinguished_folder_id('inbox')
     end
 
+    describe "create_item" do
+    end
   end
 end

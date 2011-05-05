@@ -88,23 +88,6 @@ module Rews
     end
 
     describe Folder::BaseFolderId do
-      def mock_request(client, action, attrs, response)
-        # deal with different call arity
-        mock(client).savon_client.mock!.request(*[:wsdl, action, attrs].compact) do |*args|
-          block = args.last # block is the last arg
-
-          ctx = RequestProxy.new()
-          mock(ctx.http).headers.mock!["SOAPAction"]="\"#{SCHEMA_MESSAGES}/#{action}\""
-          ns = Object.new
-          mock(ctx.soap).namespaces{ns}
-          mock(ns)["xmlns:t"]=Rews::SCHEMA_TYPES
-          mock(ctx.soap).body=(anything)
-          
-          ctx.eval_with_delegation(&block)
-          response
-        end
-      end
-
       describe "find_folder" do
         def test_find_folder(client, folder_shape, indexed_page_folder_view, restriction, result)
           shape = Object.new
@@ -129,7 +112,7 @@ module Rews
           response = Object.new
           mock(response).to_hash{{:find_folder_response=>{:response_messages=>{:find_folder_response_message=>{:response_class=>"Success", :root_folder=>result}}}}}
 
-          mock_request(client, "FindFolder", {"Traversal"=>"Shallow"}, response)
+          RequestProxy.mock_request(self, client, "FindFolder", {"Traversal"=>"Shallow"}, response)
 
           opts = {}
           opts[:folder_shape] = folder_shape if folder_shape
@@ -227,7 +210,7 @@ module Rews
         response = Object.new
         mock(response).to_hash{{:find_item_response=>{:response_messages=>{:find_item_response_message=>{:response_class=>"Success", :root_folder=>result}}}}}
 
-        mock_request(client, "FindItem", {"Traversal"=>"Shallow"}, response)
+        RequestProxy.mock_request(self, client, "FindItem", {"Traversal"=>"Shallow"}, response)
 
         opts = {}
         opts[:item_shape] = item_shape if item_shape
@@ -334,7 +317,7 @@ module Rews
           response = Object.new
           mock(response).to_hash{{:get_item_response=>{:response_messages=>{:get_item_response_message=>{:response_class=>"Success", :items=>result}}}}}
           
-          mock_request(client, "GetItem", nil, response)
+          RequestProxy.mock_request(self, client, "GetItem", nil, response)
           
           opts = {}
           opts[:item_shape]=item_shape if item_shape
@@ -407,7 +390,7 @@ module Rews
           response = Object.new
           mock(response).to_hash{{:delete_item_response=>{:response_messages=>{:delete_item_response_message=>{:response_class=>"Success"}}}}}
           
-          mock_request(client, "DeleteItem", {:DeleteType=>delete_type}, response)
+          RequestProxy.mock_request(self, client, "DeleteItem", {:DeleteType=>delete_type}, response)
           
           opts = {}
           opts[:delete_type]=delete_type if delete_type

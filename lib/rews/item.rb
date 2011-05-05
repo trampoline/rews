@@ -173,15 +173,10 @@ module Rews
 
       # sets message:isReadReceiptRequested and message:isDeliveryReceiptRequested
       # properties of a message to false
-      def suppress_receipts(opts={})
+      def set_is_read(is_read=true)
         update_item(:conflict_resolution=>"AlwaysOverwrite",
                     :message_disposition=>"SaveOnly",
-                    :updates=>[SetItemField.new("message:IsReadReceiptRequested",
-                                                [:message, nil,
-                                                 [:is_read_receipt_requested, nil, "false"]]),
-                               SetItemField.new("message:IsDeliveryReceiptRequested",
-                                                [:message, nil,
-                                                 [:is_delivery_receipt_requested, nil, "false"]])])
+                    :updates=>[SetItemField.new("message:IsRead", [:message,[:is_read, is_read.to_s]])])
       end
 
       def to_xml(ignore_change_key=false)

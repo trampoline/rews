@@ -63,6 +63,16 @@ module Rews
       Hash[h.map{|k,v| [camelize(k.to_s), v]}]
     end
 
+    # convert rsxml to xml, transforming tags to CamelCase and prefixing with
+    # the t: namespace prefix
+    def rsxml_to_xml(sexp)
+      Rsxml.to_xml(sexp) do |tag, attrs|
+        ttag = "t:#{camelize(tag.to_s)}"
+        tattrs = Hash[attrs.map{|k,v| [camelize(k.to_s), v]}]
+        [ttag, tattrs]
+      end
+    end
+
     # check the response codes of an Exchange Web Services request.
     # the supplied block makes a SOAP request, and the response is parsed
     # out and checked
