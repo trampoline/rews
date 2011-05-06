@@ -29,15 +29,20 @@ to use :
                             :indexed_page_item_view=>{:max_entries_returned=>10, :offset=>0})
 
   # get some properties for a bunch of messages in one hit
-  messages = inbox.get_item(mids, :item_shape=>{
-                                    :base_shape=>:IdOnly,
-                                    :additional_properties=>[
-                                      [:field_uri, "item:Subject"],
-                                      [:field_uri, "item:DateTimeReceived"],
-                                      [:field_uri, "message:InternetMessageId"]]})
+  messages = c.get_item(mids, :item_shape=>{
+                                :base_shape=>:IdOnly,
+                                :additional_properties=>[
+                                  [:field_uri, "item:Subject"],
+                                  [:field_uri, "item:DateTimeReceived"],
+                                  [:field_uri, "message:InternetMessageId"],
+                                  [:field_uri, "message:IsRead"],
+                                  [:field_uri, "message:IsReadReceiptRequested"]]})
+
+  # suppress read receipts on any messages which have requested them
+  c.suppress_read_receipt(messages)
 
   # delete the items to the DeletedItems folder
-  inbox.delete_item(mids, :delete_type=>:MoveToDeletedItems)
+  c.delete_item(mids, :delete_type=>:MoveToDeletedItems)
 
 == Install
 

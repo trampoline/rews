@@ -82,7 +82,7 @@ module Rews
     # and those Items have +IsRead+ or +IsReadReceiptRequested+ properties then
     # no +SuppressReadReceipt+ Item will be created if ( +IsRead+=true or
     # +IsReadReceiptRequested+=false)
-    def suppress_read_receipts(iids)
+    def suppress_read_receipt(iids)
       items = iids.map do |item_or_item_id|
         item_id = item_or_item_id.is_a?(Item::Item) ? item_or_item_id.item_id : item_or_item_id
         srr = [:suppress_read_receipt, [:reference_item_id, {:id=>item_id.id, :change_key=>item_id.change_key}]]
@@ -101,5 +101,120 @@ module Rews
       end.compact
       create_item(:items=>items) if items.length>0
     end
+
+    GET_ITEM_OPTS = {
+      :item_shape=>Shape::ITEM_SHAPE_OPTS,
+      :ignore_change_keys=>nil
+    }
+
+    # retrieve a bunch of <tt>Item::Item</tt>s in one API hit.
+    # takes a list of <tt>Item::ItemId</tt>s, or a list of <tt>Item::Item</tt>, 
+    # or a <tt>Folder::FindResult</tt> and options to specify +Shape::ItemShape+
+    def get_item(message_ids, opts={})
+      opts = check_opts(GET_ITEM_OPTS, opts)
+      message_ids = message_ids.result if message_ids.is_a?(Folder::FindResult)
+
+      r = with_error_check(self, :get_item_response,:response_messages,:get_item_response_message) do
+        self.savon_client.request(:wsdl, "GetItem") do
+          http.headers["SOAPAction"] = "\"#{SCHEMA_MESSAGES}/GetItem\"" # required by EWS 2007
+          soap.namespaces["xmlns:t"]=SCHEMA_TYPES
+          
+          xml = Builder::XmlMarkup.new
+
+          xml << Shape::ItemShape.new(opts[:item_shape]||{}).to_xml
+          xml.wsdl :ItemIds do
+            message_ids.each do |mid|
+              mid = mid.item_id if mid.is_a?(Item::Item)
+              xml << mid.to_xml(opts[:ignore_change_keys])
+            end
+          end
+
+          soap.body = xml.target!
+        end
+      end
+      Item.read_get_item_response_messages(self, r)
+    end
+
+
+
+    UPDATE_ITEM_OPTS = {
+      :conflict_resolution => "AutoResolve",
+      :message_disposition => "SaveOnly",
+      :ignore_change_keys=>false,
+      :updates => nil,
+    }
+
+    # bulk update a bunch of Items in one API hit
+    # takes a list of <tt>Item::ItemId</tt>s, or a list of <tt>Item::Item</tt>,
+    # or a <tt>Folder::FindResult</tt> and applies the same set of updates to each of them
+    def update_item(message_ids, opts={})
+      opts = check_opts(UPDATE_ITEM_OPTS, opts)
+      message_ids = message_ids.result if message_ids.is_a?(Folder::FindResult)
+
+      updates = [*opts[:updates]].compact
+      raise "no updates!" if updates.empty?
+      r = with_error_check(self, :update_item_response, :response_messages, :update_item_response_message) do
+        self.savon_client.request(:wsdl, "UpdateItem", 
+                                  :ConflictResolution=>opts[:conflict_resolution],
+                                  :MessageDisposition=>opts[:message_disposition]) do
+          http.headers["SOAPAction"] = "\"#{SCHEMA_MESSAGES}/UpdateItem\"" # required by EWS 2007
+          soap.namespaces["xmlns:t"]=SCHEMA_TYPES
+          
+          xml = Builder::XmlMarkup.new
+          
+          xml.wsdl :ItemChanges do
+            message_ids.each do |mid|
+              mid = mid.item_id if mid.is_a?(Item::Item)
+              xml.t :ItemChange do
+                xml << mid.to_xml(opts[:ignore_change_keys])
+                xml.t :Updates do
+                  updates.each do |update|
+                    xml << update.to_xml
+                  end
+                end
+              end
+            end
+          end
+          
+          soap.body = xml.target!
+        end
+      end
+      r
+    end
+
+    DELETE_ITEM_OPTS = {
+      :delete_type! =>nil,
+      :ignore_change_keys=>false
+    }
+
+    # delete a bunch of Items in one API hit.
+    # takes a list of <tt>Item::ItemId</tt>s, or a list of <tt>Item::Item</tt>, 
+    # or a <tt>Folder::FindResult</tt> and options to specify DeleteType
+    def delete_item(message_ids, opts={})
+      opts = check_opts(DELETE_ITEM_OPTS, opts)
+      message_ids = message_ids.result if message_ids.is_a?(Folder::FindResult)
+
+      r = with_error_check(self, :delete_item_response, :response_messages, :delete_item_response_message) do
+        self.savon_client.request(:wsdl, "DeleteItem", :DeleteType=>opts[:delete_type]) do
+          http.headers["SOAPAction"] = "\"#{SCHEMA_MESSAGES}/DeleteItem\"" # required by EWS 2007
+          soap.namespaces["xmlns:t"]=SCHEMA_TYPES
+          
+          xml = Builder::XmlMarkup.new
+
+          xml.wsdl :ItemIds do
+            message_ids.each do |mid|
+              mid = mid.item_id if mid.is_a?(Item::Item)
+              xml << mid.to_xml(opts[:ignore_change_keys])
+            end
+          end
+
+          soap.body = xml.target!
+        end
+      end
+      true
+    end
+
+    
+
   end
 end
