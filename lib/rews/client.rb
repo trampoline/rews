@@ -66,11 +66,9 @@ module Rews
 
           xml = Builder::XmlMarkup.new
 
-          xml.wsdl :CreateItem do
-            xml.t :Items do
-              items.each do |item|
-                xml << Util.rsxml_to_xml(item)
-              end
+          xml.wsdl :Items do
+            items.each do |item|
+              xml << Util.rsxml_to_xml(item)
             end
           end
 
@@ -101,7 +99,7 @@ module Rews
           srr
         end
       end.compact
-      create_item(:items=>items)
+      create_item(:items=>items) if items.length>0
     end
   end
 end

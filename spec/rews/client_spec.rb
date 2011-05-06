@@ -36,10 +36,9 @@ module Rews
         client = Client.new("https://foo/EWS/Exchange.asmx", :ntlm, "EXCHDOM\\foo", "password")
         test_create_item(client, [[:suppress_read_receipt, [:reference_item_id, {:id=>"abc", :change_key=>"def"}]]]) do |body|
           rsxml = Rsxml.to_rsxml(body, :ns=>{"wsdl"=>"ews_wsdl", "t"=>"ews_types"})
-          rsxml.should == ["wsdl:CreateItem", {"xmlns:wsdl"=>"ews_wsdl", "xmlns:t"=>"ews_types"},
-                           ["t:Items",
-                            ["t:SuppressReadReceipt",
-                             ["t:ReferenceItemId", {"Id"=>"abc", "ChangeKey"=>"def"}]]]]
+          rsxml.should == ["wsdl:Items",{"xmlns:wsdl"=>"ews_wsdl", "xmlns:t"=>"ews_types"},
+                           ["t:SuppressReadReceipt",
+                            ["t:ReferenceItemId", {"Id"=>"abc", "ChangeKey"=>"def"}]]]
         end
       end
     end
@@ -63,12 +62,11 @@ module Rews
         test_suppress_read_receipts(client, [Item::ItemId.new(client, {:id=>"abc", :change_key=>"def"}),
                                              Item::ItemId.new(client, {:id=>"ghi", :change_key=>"jkl"})]) do |body|
           rsxml = Rsxml.to_rsxml(body, :ns=>{"wsdl"=>"ews_wsdl", "t"=>"ews_types"})
-          rsxml.should ==  ["wsdl:CreateItem", {"xmlns:wsdl"=>"ews_wsdl", "xmlns:t"=>"ews_types"},
-                            ["t:Items",
-                             ["t:SuppressReadReceipt",
-                              ["t:ReferenceItemId", {"Id"=>"abc", "ChangeKey"=>"def"}]],
-                             ["t:SuppressReadReceipt",
-                              ["t:ReferenceItemId", {"Id"=>"ghi", "ChangeKey"=>"jkl"}]]]]
+          rsxml.should ==  ["wsdl:Items", {"xmlns:wsdl"=>"ews_wsdl", "xmlns:t"=>"ews_types"},
+                            ["t:SuppressReadReceipt",
+                             ["t:ReferenceItemId", {"Id"=>"abc", "ChangeKey"=>"def"}]],
+                            ["t:SuppressReadReceipt",
+                             ["t:ReferenceItemId", {"Id"=>"ghi", "ChangeKey"=>"jkl"}]]]
         end
       end
 
@@ -77,12 +75,11 @@ module Rews
         test_suppress_read_receipts(client, [Item::Item.new(client, 'Message', {:item_id=>{:id=>'abc', :change_key=>'def'}}),
                                              Item::Item.new(client, 'Message', {:item_id=>{:id=>'ghi', :change_key=>'jkl'}})]) do |body|
           rsxml = Rsxml.to_rsxml(body, :ns=>{"wsdl"=>"ews_wsdl", "t"=>"ews_types"})
-          rsxml.should ==  ["wsdl:CreateItem", {"xmlns:wsdl"=>"ews_wsdl", "xmlns:t"=>"ews_types"},
-                            ["t:Items",
-                             ["t:SuppressReadReceipt",
-                              ["t:ReferenceItemId", {"Id"=>"abc", "ChangeKey"=>"def"}]],
-                             ["t:SuppressReadReceipt",
-                              ["t:ReferenceItemId", {"Id"=>"ghi", "ChangeKey"=>"jkl"}]]]]
+          rsxml.should ==  ["wsdl:Items", {"xmlns:wsdl"=>"ews_wsdl", "xmlns:t"=>"ews_types"},
+                            ["t:SuppressReadReceipt",
+                             ["t:ReferenceItemId", {"Id"=>"abc", "ChangeKey"=>"def"}]],
+                            ["t:SuppressReadReceipt",
+                             ["t:ReferenceItemId", {"Id"=>"ghi", "ChangeKey"=>"jkl"}]]]
         end
       end
 
@@ -98,10 +95,9 @@ module Rews
                                                             {:item_id=>{:id=>'mno', :change_key=>'pqr'},
                                                               :is_read_receipt_requested=>false})]) do |body|
           rsxml = Rsxml.to_rsxml(body, :ns=>{"wsdl"=>"ews_wsdl", "t"=>"ews_types"})
-          rsxml.should == ["wsdl:CreateItem", {"xmlns:wsdl"=>"ews_wsdl", "xmlns:t"=>"ews_types"},
-                           ["t:Items",
-                            ["t:SuppressReadReceipt",
-                             ["t:ReferenceItemId", {"Id"=>"ghi", "ChangeKey"=>"jkl"}]]]]
+          rsxml.should == ["wsdl:Items", {"xmlns:wsdl"=>"ews_wsdl", "xmlns:t"=>"ews_types"},
+                           ["t:SuppressReadReceipt",
+                            ["t:ReferenceItemId", {"Id"=>"ghi", "ChangeKey"=>"jkl"}]]]
         end
       end
     end
