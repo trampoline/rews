@@ -83,6 +83,8 @@ module Rews
     # no +SuppressReadReceipt+ Item will be created if ( +IsRead+=true or
     # +IsReadReceiptRequested+=false)
     def suppress_read_receipt(iids)
+      iids = iids.result if iids.is_a?(Folder::FindResult)
+
       items = iids.map do |item_or_item_id|
         item_id = item_or_item_id.is_a?(Item::Item) ? item_or_item_id.item_id : item_or_item_id
         srr = [:suppress_read_receipt, [:reference_item_id, {:id=>item_id.id, :change_key=>item_id.change_key}]]

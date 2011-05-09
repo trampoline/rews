@@ -83,6 +83,20 @@ module Rews
         end
       end
 
+      it "should send a CreateItemRequest with SuppressReadReceipt for each item in a FindResult" do
+        client = Client.new("https://foo/EWS/Exchange.asmx", :ntlm, "EXCHDOM\\foo", "password")
+        fr = Folder::FindResult.new({}){[Item::Item.new(client, 'Message', {:item_id=>{:id=>'abc', :change_key=>'def'}}),
+                                         Item::Item.new(client, 'Message', {:item_id=>{:id=>'ghi', :change_key=>'jkl'}})]}
+        test_suppress_read_receipt(client, fr) do |body|
+          rsxml = Rsxml.to_rsxml(body, :ns=>{"wsdl"=>"ews_wsdl", "t"=>"ews_types"})
+          rsxml.should ==  ["wsdl:Items", {"xmlns:wsdl"=>"ews_wsdl", "xmlns:t"=>"ews_types"},
+                            ["t:SuppressReadReceipt",
+                             ["t:ReferenceItemId", {"Id"=>"abc", "ChangeKey"=>"def"}]],
+                            ["t:SuppressReadReceipt",
+                             ["t:ReferenceItemId", {"Id"=>"ghi", "ChangeKey"=>"jkl"}]]]
+        end
+      end
+
       it "should filter Items with IsRead=true or IsReadReceiptRequested=false before making request" do
         client = Client.new("https://foo/EWS/Exchange.asmx", :ntlm, "EXCHDOM\\foo", "password")
         test_suppress_read_receipt(client, [Item::Item.new(client, 
