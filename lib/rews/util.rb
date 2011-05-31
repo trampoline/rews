@@ -55,7 +55,7 @@ module Rews
 
     # camel-case a +String+
     def camelize(s)
-      s.split('_').map(&:capitalize).join
+      s.to_s.split('_').map(&:capitalize).join
     end
 
     # camel-case the keys of a +Hash+
@@ -63,14 +63,38 @@ module Rews
       Hash[h.map{|k,v| [camelize(k.to_s), v]}]
     end
 
-    # convert rsxml to xml, transforming tags to CamelCase and prefixing with
-    # the t: namespace prefix
-    def rsxml_to_xml(sexp)
-      Rsxml.to_xml(sexp) do |tag, attrs|
-        ttag = "t:#{camelize(tag.to_s)}"
-        tattrs = Hash[attrs.map{|k,v| [camelize(k.to_s), v]}]
-        [ttag, tattrs]
+    # given an exploded qname, apply a given namespace and uri if the qname
+    # has no namespace already
+    def apply_namespace(qname, apply_prefix, apply_uri)
+      local_part, prefix, uri = qname
+      
+      if !prefix
+        prefix = apply_prefix
+        uri = apply_uri
       end
+
+      [local_part, prefix, uri].compact
+    end
+
+    # given an exploded qname, camelize the local_part
+    def camelize_qname(qname)
+      local_part, prefix, uri = qname
+      [camelize(local_part), prefix, uri].compact
+    end
+
+    # convert rsxml to xml, transforming local_parts of QNames to CamelCase and prefixing with
+    # the t: namespace prefix if no namespace is already applied
+    def rsxml_to_xml(sexp)
+      # visit the rsxml, prefix the element tags with "t" namespace prefix, and camelcase
+      # all QName local_parts
+      transform_visitor = Rsxml::Visitor::BuildRsxmlVisitor.new() do |context, element_name, attrs|
+        t_element_name = camelize_qname(apply_namespace(element_name, "t", Rews::SCHEMA_TYPES))
+        t_attrs = Hash[attrs.map{|attr_name,v| [camelize_qname(attr_name), v]}]
+        [t_element_name, t_attrs]
+      end
+
+      xrsxml = Rsxml::Sexp.traverse(sexp, transform_visitor).sexp
+      Rsxml.to_xml(xrsxml, :ns=>{"t"=>Rews::SCHEMA_TYPES, "wsdl"=>Rews::SCHEMA_MESSAGES})
     end
 
     # check the response codes of an Exchange Web Services request.

@@ -9,9 +9,9 @@ module Rews
                               [:is_read, "true"]]).to_xml
 
 
-      rsxml = Rsxml.to_rsxml(xml, :ns=>{"t"=>"ews_types"})
+      rsxml = Rsxml.to_rsxml(xml, :ns=>{"t"=>"ews_types"}, :style=>:xml)
 
-      rsxml.should == ["t:SetItemField", {"xmlns:t"=>"ews_types"},
+      rsxml.should == ["t:SetItemField",
                        ["t:FieldURI", {"FieldURI"=>"message:IsRead"}],
                        ["t:Message", ["t:IsRead", "true"]]]
     end

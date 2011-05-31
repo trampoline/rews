@@ -35,8 +35,8 @@ module Rews
       it "should create a CreateItem request and render the Items to the body" do
         client = Client.new("https://foo/EWS/Exchange.asmx", :ntlm, "EXCHDOM\\foo", "password")
         test_create_item(client, [[:suppress_read_receipt, [:reference_item_id, {:id=>"abc", :change_key=>"def"}]]]) do |body|
-          rsxml = Rsxml.to_rsxml(body, :ns=>{"wsdl"=>"ews_wsdl", "t"=>"ews_types"})
-          rsxml.should == ["wsdl:Items",{"xmlns:wsdl"=>"ews_wsdl", "xmlns:t"=>"ews_types"},
+          rsxml = Rsxml.to_rsxml(body, :ns=>{"wsdl"=>"ews_wsdl", "t"=>"ews_types"}, :style=>:xml)
+          rsxml.should == ["wsdl:Items",
                            ["t:SuppressReadReceipt",
                             ["t:ReferenceItemId", {"Id"=>"abc", "ChangeKey"=>"def"}]]]
         end
@@ -61,8 +61,8 @@ module Rews
         client = Client.new("https://foo/EWS/Exchange.asmx", :ntlm, "EXCHDOM\\foo", "password")
         test_suppress_read_receipt(client, [Item::ItemId.new(client, {:id=>"abc", :change_key=>"def"}),
                                              Item::ItemId.new(client, {:id=>"ghi", :change_key=>"jkl"})]) do |body|
-          rsxml = Rsxml.to_rsxml(body, :ns=>{"wsdl"=>"ews_wsdl", "t"=>"ews_types"})
-          rsxml.should ==  ["wsdl:Items", {"xmlns:wsdl"=>"ews_wsdl", "xmlns:t"=>"ews_types"},
+          rsxml = Rsxml.to_rsxml(body, :ns=>{"wsdl"=>"ews_wsdl", "t"=>"ews_types"}, :style=>:xml)
+          rsxml.should ==  ["wsdl:Items",
                             ["t:SuppressReadReceipt",
                              ["t:ReferenceItemId", {"Id"=>"abc", "ChangeKey"=>"def"}]],
                             ["t:SuppressReadReceipt",
@@ -74,8 +74,8 @@ module Rews
         client = Client.new("https://foo/EWS/Exchange.asmx", :ntlm, "EXCHDOM\\foo", "password")
         test_suppress_read_receipt(client, [Item::Item.new(client, 'Message', {:item_id=>{:id=>'abc', :change_key=>'def'}}),
                                              Item::Item.new(client, 'Message', {:item_id=>{:id=>'ghi', :change_key=>'jkl'}})]) do |body|
-          rsxml = Rsxml.to_rsxml(body, :ns=>{"wsdl"=>"ews_wsdl", "t"=>"ews_types"})
-          rsxml.should ==  ["wsdl:Items", {"xmlns:wsdl"=>"ews_wsdl", "xmlns:t"=>"ews_types"},
+          rsxml = Rsxml.to_rsxml(body, :ns=>{"wsdl"=>"ews_wsdl", "t"=>"ews_types"}, :style=>:xml)
+          rsxml.should ==  ["wsdl:Items",
                             ["t:SuppressReadReceipt",
                              ["t:ReferenceItemId", {"Id"=>"abc", "ChangeKey"=>"def"}]],
                             ["t:SuppressReadReceipt",
@@ -88,8 +88,8 @@ module Rews
         fr = Folder::FindResult.new({}){[Item::Item.new(client, 'Message', {:item_id=>{:id=>'abc', :change_key=>'def'}}),
                                          Item::Item.new(client, 'Message', {:item_id=>{:id=>'ghi', :change_key=>'jkl'}})]}
         test_suppress_read_receipt(client, fr) do |body|
-          rsxml = Rsxml.to_rsxml(body, :ns=>{"wsdl"=>"ews_wsdl", "t"=>"ews_types"})
-          rsxml.should ==  ["wsdl:Items", {"xmlns:wsdl"=>"ews_wsdl", "xmlns:t"=>"ews_types"},
+          rsxml = Rsxml.to_rsxml(body, :ns=>{"wsdl"=>"ews_wsdl", "t"=>"ews_types"}, :style=>:xml)
+          rsxml.should ==  ["wsdl:Items",
                             ["t:SuppressReadReceipt",
                              ["t:ReferenceItemId", {"Id"=>"abc", "ChangeKey"=>"def"}]],
                             ["t:SuppressReadReceipt",
@@ -108,8 +108,8 @@ module Rews
                                                             'Message',
                                                             {:item_id=>{:id=>'mno', :change_key=>'pqr'},
                                                               :is_read_receipt_requested=>false})]) do |body|
-          rsxml = Rsxml.to_rsxml(body, :ns=>{"wsdl"=>"ews_wsdl", "t"=>"ews_types"})
-          rsxml.should == ["wsdl:Items", {"xmlns:wsdl"=>"ews_wsdl", "xmlns:t"=>"ews_types"},
+          rsxml = Rsxml.to_rsxml(body, :ns=>{"wsdl"=>"ews_wsdl", "t"=>"ews_types"}, :style=>:xml)
+          rsxml.should == ["wsdl:Items",
                            ["t:SuppressReadReceipt",
                             ["t:ReferenceItemId", {"Id"=>"ghi", "ChangeKey"=>"jkl"}]]]
         end
@@ -233,8 +233,8 @@ module Rews
                            SetItemField.new("message:IsRead", [:message, [:is_read, "true"]]),
                            [Item::ItemId.new(client, :id=>"abc", :change_key=>"def")]) do |body|
             
-            rsxml = Rsxml.to_rsxml(body, :ns=>{:wsdl=>"ews_wsdl", :t=>"ews_types", ""=>"ews_wsdl"})
-            Rsxml.compare(rsxml, ["wsdl:ItemChanges", {"xmlns:wsdl"=>"ews_wsdl", "xmlns:t"=>"ews_types", "xmlns"=>"ews_wsdl"},
+            rsxml = Rsxml.to_rsxml(body, :ns=>{:wsdl=>"ews_wsdl", :t=>"ews_types", ""=>"ews_wsdl"}, :style=>:xml)
+            Rsxml.compare(rsxml, ["wsdl:ItemChanges",
                                   ["t:ItemChange",
                                    ["t:ItemId", {"Id"=>"abc", "ChangeKey"=>"def"}],
                                    ["t:Updates",
@@ -252,8 +252,8 @@ module Rews
                            [Item::ItemId.new(client, :id=>"abc", :change_key=>"def"),
                             Item::ItemId.new(client, :id=>"ghi", :change_key=>"jkl")]) do |body|
             
-            rsxml = Rsxml.to_rsxml(body, :ns=>{:wsdl=>"ews_wsdl", :t=>"ews_types", ""=>"ews_wsdl"})
-            Rsxml.compare(rsxml, ["wsdl:ItemChanges", {"xmlns:wsdl"=>"ews_wsdl", "xmlns:t"=>"ews_types", "xmlns"=>"ews_wsdl"},
+            rsxml = Rsxml.to_rsxml(body, :ns=>{:wsdl=>"ews_wsdl", :t=>"ews_types", ""=>"ews_wsdl"}, :style=>:xml)
+            Rsxml.compare(rsxml, ["wsdl:ItemChanges",
                                   ["t:ItemChange",
                                    ["t:ItemId", {"Id"=>"abc", "ChangeKey"=>"def"}],
                                    ["t:Updates",

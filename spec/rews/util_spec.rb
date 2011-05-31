@@ -26,11 +26,15 @@ module Rews
     end
 
     describe "rsxml_to_xml" do
-      it "should camelize tags and attribute names, and prefix tags with t:" do
+      it "should camelize tags and attribute names, and give un-namespaced tags 't' prefix" do
         Util.rsxml_to_xml([:foo]).should == "<t:Foo></t:Foo>"
         Util.rsxml_to_xml([:foo_foo, {:bar_bar=>"blah"}]).should == '<t:FooFoo BarBar="blah"></t:FooFoo>'
         Util.rsxml_to_xml([:foo_foo, {:bar_bar=>"blah"}, "foofoo", [:baz_baz, {:boo_hoo=>"10"}, "bazbaz"]]).should ==
           '<t:FooFoo BarBar="blah">foofoo<t:BazBaz BooHoo="10">bazbaz</t:BazBaz></t:FooFoo>'
+      end
+
+      it "should not prefix tags which are already namespaced" do
+        Util.rsxml_to_xml([[:foo, "f", "http://f.com/f"]]).should == '<f:Foo xmlns:f="http://f.com/f"></f:Foo>'
       end
     end
 

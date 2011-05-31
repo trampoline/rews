@@ -201,8 +201,8 @@ module Rews
           update=Object.new
           stub(update).to_xml{"blahblah"}
           msg = test_update_item(c, "AutoResolve", "SaveOnly", false, update) do |body|
-            rsxml = Rsxml.to_rsxml(body, :ns=>{:wsdl=>"ews_wsdl", :t=>"ews_types"})
-            rsxml.should == ["wsdl:ItemChanges", {"xmlns:wsdl"=>"ews_wsdl", "xmlns:t"=>"ews_types"},
+            rsxml = Rsxml.to_rsxml(body, :ns=>{:wsdl=>"ews_wsdl", :t=>"ews_types"}, :style=>:xml)
+            rsxml.should == ["wsdl:ItemChanges",
                              ["t:ItemChange",
                               ["t:ItemId", {"Id"=>"abc", "ChangeKey"=>"def"}],
                               ["t:Updates", "blahblah"]]]
@@ -246,8 +246,8 @@ module Rews
         it "should generate the body xml and parse the response" do
           c = client
           test_set_is_read(c, true) do |body|
-            rsxml = Rsxml.to_rsxml(body, :ns=>{:wsdl=>"ews_wsdl", :t=>"ews_types", ""=>"ews_wsdl"})
-            Rsxml.compare(rsxml, ["wsdl:ItemChanges", {"xmlns:wsdl"=>"ews_wsdl", "xmlns:t"=>"ews_types", "xmlns"=>"ews_wsdl"},
+            rsxml = Rsxml.to_rsxml(body, :ns=>{:wsdl=>"ews_wsdl", :t=>"ews_types", ""=>"ews_wsdl"}, :style=>:xml)
+            Rsxml.compare(rsxml, ["wsdl:ItemChanges",
                                   ["t:ItemChange",
                                    ["t:ItemId", {"Id"=>"abc", "ChangeKey"=>"def"}],
                                    ["t:Updates",
