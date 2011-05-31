@@ -55,7 +55,11 @@ module Rews
 
     # camel-case a +String+
     def camelize(s)
-      s.to_s.split('_').map(&:capitalize).join
+      if s.is_a?(Symbol)
+        s.to_s.split('_').map(&:capitalize).join.to_sym
+      else
+        s.split('_').map(&:capitalize).join
+      end
     end
 
     # camel-case the keys of a +Hash+

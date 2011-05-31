@@ -16,6 +16,10 @@ module Rews
       it "should camelize a String" do
         Util.camelize("foo_bar").should == "FooBar"
       end
+
+      it "should camelize a Symbol" do
+        Util.camelize(:foo_bar).should == :FooBar
+      end
     end
 
     describe "camel_keys" do
