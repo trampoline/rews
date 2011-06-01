@@ -1,5 +1,7 @@
 $: << File.expand_path("..", __FILE__)
 
+require 'date'
+require 'time'
 require 'net/ntlm'
 # require 'httpclient' # don't need httpclient now ntlm-http is fixed too
 require 'savon'
