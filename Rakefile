@@ -10,7 +10,7 @@ begin
     gem.email = "craig@trampolinesystems.com"
     gem.homepage = "http://github.com/trampoline/rews"
     gem.authors = ["Trampoline Systems Ltd"]
-    gem.add_runtime_dependency "savon", ">= 0.9.2"
+    gem.add_runtime_dependency "savon", "= 0.9.1"
     gem.add_runtime_dependency "httpclient", ">= 2.2.0.2"
     gem.add_runtime_dependency "pyu-ntlm-http", ">= 0.1.3"
     gem.add_runtime_dependency "fetch_in", ">= 0.2.0"
