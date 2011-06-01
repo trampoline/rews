@@ -14,12 +14,13 @@ Gem::Specification.new do |s|
   s.email = %q{craig@trampolinesystems.com}
   s.extra_rdoc_files = [
     "LICENSE",
-    "README.rdoc"
+    "README.md"
   ]
   s.files = [
     ".document",
+    ".travis.yml",
     "LICENSE",
-    "README.rdoc",
+    "README.md",
     "Rakefile",
     "VERSION",
     "lib/rews.rb",
@@ -32,6 +33,7 @@ Gem::Specification.new do |s|
     "lib/rews/update.rb",
     "lib/rews/util.rb",
     "lib/rews/view.rb",
+    "rews.gemspec",
     "spec/request_proxy.rb",
     "spec/rews/client_spec.rb",
     "spec/rews/folder_spec.rb",
@@ -50,20 +52,6 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
   s.rubygems_version = %q{1.6.2}
   s.summary = %q{a Ruby client for Exchange Web Services}
-  s.test_files = [
-    "spec/request_proxy.rb",
-    "spec/rews/client_spec.rb",
-    "spec/rews/folder_spec.rb",
-    "spec/rews/item_spec.rb",
-    "spec/rews/restriction_spec.rb",
-    "spec/rews/shape_spec.rb",
-    "spec/rews/sort_order_spec.rb",
-    "spec/rews/update_spec.rb",
-    "spec/rews/util_spec.rb",
-    "spec/rews/view_spec.rb",
-    "spec/rews_spec.rb",
-    "spec/spec_helper.rb"
-  ]
 
   if s.respond_to? :specification_version then
     s.specification_version = 3
@@ -74,18 +62,20 @@ Gem::Specification.new do |s|
       s.add_runtime_dependency(%q<pyu-ntlm-http>, [">= 0.1.3"])
       s.add_runtime_dependency(%q<fetch_in>, [">= 0.2.0"])
       s.add_runtime_dependency(%q<rsxml>, [">= 0.3.0"])
-      s.add_development_dependency(%q<rspec>, [">= 1.2.9"])
+      s.add_development_dependency(%q<rspec>, ["~> 1.3.1"])
       s.add_development_dependency(%q<rr>, [">= 0.10.5"])
       s.add_development_dependency(%q<nokogiri>, [">= 1.4.4"])
+      s.add_development_dependency(%q<yard>, [">= 0.7.1"])
     else
       s.add_dependency(%q<savon>, ["= 0.9.1"])
       s.add_dependency(%q<httpclient>, [">= 2.2.0.2"])
       s.add_dependency(%q<pyu-ntlm-http>, [">= 0.1.3"])
       s.add_dependency(%q<fetch_in>, [">= 0.2.0"])
       s.add_dependency(%q<rsxml>, [">= 0.3.0"])
-      s.add_dependency(%q<rspec>, [">= 1.2.9"])
+      s.add_dependency(%q<rspec>, ["~> 1.3.1"])
       s.add_dependency(%q<rr>, [">= 0.10.5"])
       s.add_dependency(%q<nokogiri>, [">= 1.4.4"])
+      s.add_dependency(%q<yard>, [">= 0.7.1"])
     end
   else
     s.add_dependency(%q<savon>, ["= 0.9.1"])
@@ -93,9 +83,10 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<pyu-ntlm-http>, [">= 0.1.3"])
     s.add_dependency(%q<fetch_in>, [">= 0.2.0"])
     s.add_dependency(%q<rsxml>, [">= 0.3.0"])
-    s.add_dependency(%q<rspec>, [">= 1.2.9"])
+    s.add_dependency(%q<rspec>, ["~> 1.3.1"])
     s.add_dependency(%q<rr>, [">= 0.10.5"])
     s.add_dependency(%q<nokogiri>, [">= 1.4.4"])
+    s.add_dependency(%q<yard>, [">= 0.7.1"])
   end
 end
 
