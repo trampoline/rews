@@ -46,15 +46,6 @@ to use :
 
 == Install
 
-slightly painful : because of bugs in released versions of gems relating to NTLM authentication, you need 
-versions of ntlm-http gem with fixes :
-
-  * ntlm-http v0.1.3 : branch fix_ntlm_domain from: https://github.com/trampoline/ntlm-http/tree/new-version-0.1.2.1
-
-also, httpclient >= 2.1.7 is supported 
-
-then:
-
   gem install rews
 
 == Note on Patches/Pull Requests
