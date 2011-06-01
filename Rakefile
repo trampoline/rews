@@ -2,6 +2,17 @@ require 'rubygems'
 require 'rake'
 
 begin
+  require "yard"
+
+  YARD::Rake::YardocTask.new do |t|
+    t.files = ["README.md", "lib/**/*.rb"]
+  end
+rescue LoadError
+  desc message = %{"gem install yard" to generate documentation}
+  task("yard") { abort message }
+end
+
+begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
     gem.name = "rews"
@@ -21,7 +32,7 @@ begin
 
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
   end
-  Jeweler::GemcutterTasks.new
+  Jeweler::RubygemsDotOrgTasks.new
 rescue LoadError
   puts "Jeweler (or a dependency) not available. Install it with: gem install jeweler"
 end
