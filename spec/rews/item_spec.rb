@@ -198,8 +198,9 @@ module Rews
 
         it "should generate the body xml and parse the response" do
           c = client
-          update=Object.new
-          stub(update).to_xml{"blahblah"}
+          # we test an array of updates, because rr stubbed objects bork on 1.9.2 with [*foo]
+          update=[Object.new]
+          stub(update[0]).to_xml{"blahblah"}
           msg = test_update_item(c, "AutoResolve", "SaveOnly", false, update) do |body|
             rsxml = Rsxml.to_rsxml(body, :ns=>{:wsdl=>"ews_wsdl", :t=>"ews_types"}, :style=>:xml)
             rsxml.should == ["wsdl:ItemChanges",
