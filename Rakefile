@@ -1,21 +1,19 @@
+# encoding: utf-8
+
 require 'rubygems'
-require 'rake'
-
+require 'bundler'
 begin
-  require "yard"
-
-  YARD::Rake::YardocTask.new do |t|
-    t.files = ["README.md", "lib/**/*.rb"]
-  end
-rescue LoadError
-  desc message = %{"gem install yard" to generate documentation}
-  task("yard") { abort message }
+  Bundler.setup(:default, :development)
+rescue Bundler::BundlerError => e
+  $stderr.puts e.message
+  $stderr.puts "Run `bundle install` to install missing gems"
+  exit e.status_code
 end
+require 'rake'
 
 require 'jeweler'
 Jeweler::Tasks.new do |gem|
-  # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
-
+  # gem is a Gem::Specification... see http://docs.rubygems.org/read/chapter/20 for more options
   gem.name = "rews"
   gem.homepage = "http://github.com/trampoline/rews"
   gem.license = "MIT"
@@ -24,19 +22,10 @@ Jeweler::Tasks.new do |gem|
   gem.email = "craig@trampolinesystems.com"
   gem.authors = ["Trampoline Systems Ltd"]
 
-  gem.add_runtime_dependency "savon", "= 0.9.1"
-  gem.add_runtime_dependency "httpclient", ">= 2.2.0.2"
-  gem.add_runtime_dependency "pyu-ntlm-http", ">= 0.1.3"
-  gem.add_runtime_dependency "fetch_in", ">= 0.2.0"
-  gem.add_runtime_dependency "rsxml", ">= 0.3.0"
-  gem.add_runtime_dependency "nokogiri", ">= 1.4.4"
-  gem.add_development_dependency "rspec", "~> 1.3.1"
-  gem.add_development_dependency "rr", ">= 0.10.5"
-  gem.add_development_dependency "jeweler", ">= 1.5.2"
-  gem.add_development_dependency "rcov", ">= 0"
-  gem.add_development_dependency "yard", ">= 0.7.1"
+  # dependencies defined in Gemfile
 end
 Jeweler::RubygemsDotOrgTasks.new
+
 
 require 'spec/rake/spectask'
 Spec::Rake::SpecTask.new(:spec) do |spec|
@@ -50,4 +39,19 @@ Spec::Rake::SpecTask.new(:rcov) do |spec|
   spec.rcov = true
 end
 
+Spec::Rake::SpecTask.new(:simplecov) do |spec|
+  spec.libs << 'lib' << 'spec'
+  spec.pattern = 'spec/**/*_spec.rb'
+  ENV['SIMPLECOV'] = "true"
+end
 task :default => :spec
+
+require 'rdoc/task'
+Rake::RDocTask.new do |rdoc|
+  version = File.exist?('VERSION') ? File.read('VERSION') : ""
+
+  rdoc.rdoc_dir = 'rdoc'
+  rdoc.title = "activerecord-model-spaces #{version}"
+  rdoc.rdoc_files.include('README*')
+  rdoc.rdoc_files.include('lib/**/*.rb')
+end
